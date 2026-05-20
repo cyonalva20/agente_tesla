@@ -771,3 +771,79 @@ FileNotFoundError: [Errno 2] No such file or directory: '/tmp\\TESLA-2026-0043D8
 2026-05-20 07:44:42 | INFO  | [ORCH] sid=77625598-3ecc-4695-8c8b-629b9433e0a9 | RESPUESTA | fase=COMPLETADO | ¡Tu pago ha sido **verificado y confirmado** con éxito! ✅🎉
 
 **Anghelo ya está oficialmente matriculado** en el ciclo Intensivo de 5to de Secundaria. S
+2026-05-20 08:55:06 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | MENSAJE | fase=CAPTACION | msg=Hola
+2026-05-20 08:55:11 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | RESPUESTA | fase=CAPTACION | ¡Hola! 👋 Bienvenido/a a **Academia Tesla** 🎓
+
+Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícula, desde informarte sobre
+2026-05-20 08:56:56 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | MENSAJE | fase=CAPTACION | msg=Que ciclos tiene?
+2026-05-20 08:57:00 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto pregunta: ¿Qué ciclos académicos tienen disponibles? Es un usuario nuevo que recién está conociendo la academia."}
+2026-05-20 08:57:03 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | ← agente_sdr | OK 503 chars | 2204ms
+2026-05-20 08:57:07 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | RESPUESTA | fase=CAPTACION | ¡Excelente pregunta! Para mostrarte los ciclos más adecuados, necesitamos saber un poco más 😊
+
+**¿En qué grado o nivel se encuentra el alumno?** Conta
+2026-05-20 08:57:17 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | MENSAJE | fase=CAPTACION | msg=el alumno esta en 5to de secundaria
+2026-05-20 08:57:20 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en conocer los ciclos académicos disponibles para un alumno de 5to de secundaria. Por favor, proporciona información sobre ciclos, horarios y precios disponibles para ese grado."}
+2026-05-20 08:57:21 | INFO  | [SDR] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-05-20 08:57:24 | INFO  | [SDR] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=consultar_ciclos | OK=[{"codigo": "G-SEC5-2026-A", "nombre": "Preparación 5to Secundaria - Básico", "grado": "5to_secundaria", "precio_soles": 600, "horario": "Sábados y Domingos 9:00am - 1:00pm", "fecha_inicio": "2026-05-06", "vacantes_disponibles": 40, "modalidad": "virtual"}, {"codigo": "G-SEC5-2026-B", "nombre": "Preparación 5to Secundaria - Intensivo", "grado": "5to_secundaria", "precio_soles": 750, "horario": "Lu | 2624ms
+2026-05-20 08:57:27 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | ← agente_sdr | OK 979 chars | 7126ms
+2026-05-20 08:57:34 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | RESPUESTA | fase=CAPTACION | ¡Aquí tienes las opciones disponibles para **5to de Secundaria**! 🎓
+
+---
+
+### 📘 Opción 1: Preparación 5to Sec. - **Básico**
+- 🗓️ **Horario:** Sábados 
+2026-05-20 08:57:50 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | MENSAJE | fase=CAPTACION | msg=me interesa el de lunes a viernes
+2026-05-20 08:57:56 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | RESPUESTA | fase=REGISTRO | ¡Excelente elección! 💪 El ciclo **Intensivo de 5to de Secundaria** es una preparación muy completa.
+
+Para continuar con el registro de matrícula, nece
+2026-05-20 08:59:35 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | MENSAJE | fase=REGISTRO | msg=Alumno: Anghelo Alexander Pintado Valverde 60741079 Apoderado: Jose Ruben Pintado Contreras 18202760 telefono: 964144695
+2026-05-20 08:59:39 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | → agente_administrativo | fase=REGISTRO | input={"datos": "{\"dni_alumno\": \"60741079\", \"nombres\": \"Anghelo Alexander\", \"apellidos\": \"Pintado Valverde\", \"grado\": \"5to de Secundaria\", \"apoderado_nombre\": \"Jose Ruben Pintado Contreras\", \"apoderado_dni\": \"18202760\", \"apoderado_telefono\": \"964144695\", \"ciclo_codigo\": \"G-S
+2026-05-20 08:59:40 | INFO  | [ADMIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | START | datos={"dni_alumno": "60741079", "nombres": "Anghelo Alexander", "apellidos": "Pintado Valverde", "grado": "5to de Secundaria"
+2026-05-20 08:59:41 | INFO  | [ADMIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=validar_dni | input={"dni": "60741079"}
+2026-05-20 08:59:43 | INFO  | [ADMIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=validar_dni | OK={"valido": true, "fuente": "reniec", "nombres": "ANGHELO ALEXANDER", "apellidos": "PINTADO VALVERDE"} | 1813ms
+2026-05-20 08:59:43 | INFO  | [ADMIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=validar_dni | input={"dni": "18202760"}
+2026-05-20 08:59:45 | INFO  | [ADMIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=validar_dni | OK={"valido": true, "fuente": "reniec", "nombres": "JOSE RUBEN", "apellidos": "PINTADO CONTRERAS"} | 1655ms
+2026-05-20 08:59:47 | INFO  | [ADMIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=upsert_alumno | input={"dni_alumno": "60741079", "nombres": "ANGHELO ALEXANDER", "apellidos": "PINTADO VALVERDE", "grado": "5to de Secundaria", "apoderado_nombre": "JOSE RUBEN PINTADO CONTRERAS", "apoderado_dni": "18202760", "apoderado_telefono": "+51964144695", "ciclo_codigo": "G-SEC5-2026-B", "estado": "Registrado"}
+2026-05-20 08:59:48 | INFO  | [ADMIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=upsert_alumno | OK={"id": "8e77e92d-4ac6-415f-bf69-241fb23e7291", "dni_alumno": "60741079", "nombres": "ANGHELO ALEXANDER", "apellidos": "PINTADO VALVERDE", "grado": "5to_secundaria", "apoderado_nombre": "JOSE RUBEN PINTADO CONTRERAS", "apoderado_dni": "18202760", "apoderado_telefono": "+51964144695", "ciclo_codigo": "G-SEC5-2026-B", "estado": "Registrado", "fecha_registro": "2026-05-20T13:59:48.993022+00:00", "fech | 822ms
+2026-05-20 08:59:51 | INFO  | [ADMIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | END | respuesta=```json
+{
+  "valido": true,
+  "errores": [],
+  "alumno_id": "8e77e92d-4ac6-415f-bf69-241fb23e7291",
+  "mensaje": "✅ MATRÍCULA EXITOSA",
+  "resumen": {
+    "alumno": "ANGHELO ALEXANDER PINTADO VALVERDE
+2026-05-20 08:59:51 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | ← agente_administrativo | OK 695 chars | 11290ms
+2026-05-20 08:59:57 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | RESPUESTA | fase=CIERRE | ¡Registro completado con éxito! 🎉✅
+
+Aquí el resumen de la matrícula:
+
+| Campo | Detalle |
+|---|---|
+| 👤 **Alumno** | Anghelo Alexander Pintado Valverd
+2026-05-20 09:00:35 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | MENSAJE | fase=CIERRE | msg=el id del pago es pi_3TZ4kH0JXTdxBFwA006DC8Te
+2026-05-20 09:00:41 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | → agente_financiero | fase=CIERRE | input={"instruccion": "Verificar pago y emitir constancia de matrícula. Datos: charge_id: pi_3TZ4kH0JXTdxBFwA006DC8Te, alumno_id: 8e77e92d-4ac6-415f-bf69-241fb23e7291, telefono_apoderado: 964144695"}
+2026-05-20 09:00:41 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | START | input=Verificar pago y emitir constancia de matrícula. Datos: charge_id: pi_3TZ4kH0JXTdxBFwA006DC8Te, alumno_id: 8e77e92d-4ac6
+2026-05-20 09:00:44 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=verificar_pago | input={"charge_id": "pi_3TZ4kH0JXTdxBFwA006DC8Te"}
+2026-05-20 09:00:48 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=verificar_pago | OK={"status": "paid", "amount": 750.0, "currency": "pen"} | 3218ms
+2026-05-20 09:00:48 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=generar_constancia | input={"alumno_id": "8e77e92d-4ac6-415f-bf69-241fb23e7291", "ciclo_codigo": "G-SEC5-2026-B"}
+2026-05-20 09:00:52 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=generar_constancia | OK={"pdf_url": "https://hgllndgayvhmtvxyufih.supabase.co/storage/v1/object/public/documents/constancias/TESLA-2026-8E77E92D.pdf", "constancia_numero": "TESLA-2026-8E77E92D", "archivo_local": "/tmp\\TESLA-2026-8E77E92D.pdf"} | 4190ms
+2026-05-20 09:00:56 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=actualizar_estado | input={"alumno_id": "8e77e92d-4ac6-415f-bf69-241fb23e7291", "nuevo_estado": "Matriculado", "metadata": {"constancia_numero": "TESLA-2026-8E77E92D", "pdf_url": "https://hgllndgayvhmtvxyufih.supabase.co/storage/v1/object/public/documents/constancias/TESLA-2026-8E77E92D.pdf", "monto_pagado": 750.0, "ciclo_co
+2026-05-20 09:00:57 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=actualizar_estado | OK={"id": "8e77e92d-4ac6-415f-bf69-241fb23e7291", "dni_alumno": "60741079", "nombres": "ANGHELO ALEXANDER", "apellidos": "PINTADO VALVERDE", "grado": "5to_secundaria", "apoderado_nombre": "JOSE RUBEN PINTADO CONTRERAS", "apoderado_dni": "18202760", "apoderado_telefono": "+51964144695", "ciclo_codigo": "G-SEC5-2026-B", "estado": "Matriculado", "fecha_registro": "2026-05-20T13:59:48.993022+00:00", "fec | 1126ms
+2026-05-20 09:00:57 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=enviar_whatsapp | input={"telefono": "+51964144695", "pdf_url": "https://hgllndgayvhmtvxyufih.supabase.co/storage/v1/object/public/documents/constancias/TESLA-2026-8E77E92D.pdf", "mensaje": "¡Hola! 👋 Confirmamos que Anghelo Alexander Pintado Valverde ha sido matriculado exitosamente en Academia Tesla. 🎓\n\n📋 **Constancia d
+2026-05-20 09:01:01 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | tool=enviar_whatsapp | OK={"enviado": true} | 4093ms
+2026-05-20 09:01:05 | INFO  | [FIN] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | END | respuesta=🎉 **¡MATRÍCULA COMPLETADA CON ÉXITO!** 🎉
+
+---
+
+### ✅ **Resumen de la Gestión:**
+
+| Campo | Detalle |
+|---|---|
+| 👤 **Alumno** | Anghelo Alexander Pintado Valverde |
+| 💳 **Estado del Pago** | ✅ PAGADO 
+2026-05-20 09:01:05 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | ← agente_financiero | OK 757 chars | 23506ms
+2026-05-20 09:01:09 | INFO  | [ORCH] sid=9bc63a79-5eeb-4088-af8b-f0a305462ccb | RESPUESTA | fase=COMPLETADO | ¡Todo listo! 🎉🎓 La matrícula de **Anghelo Alexander Pintado Valverde** ha sido completada exitosamente.
+
+**Resumen final:**
+- ✅ **Pago verificado:** S
