@@ -44,11 +44,11 @@ tools = [
     },
     {
         "name": "generar_constancia",
-        "description": "Genera el PDF de la constancia de matrícula con QR. Solo llamar si el pago es 'paid'.",
+        "description": "Genera el PDF de la constancia de matrícula con QR y lo sube a Supabase Storage. Solo llamar si el pago es 'paid'.",
         "input_schema": {
             "type": "object",
             "properties": {
-                "alumno_id": {"type": "string", "description": "UUID del alumno en Supabase"},
+                "alumno_id":   {"type": "string", "description": "UUID del alumno en Supabase"},
                 "ciclo_codigo": {"type": "string", "description": "Código del ciclo, ej: G-SEC5-2025-B"}
             },
             "required": ["alumno_id", "ciclo_codigo"]
@@ -60,7 +60,7 @@ tools = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "alumno_id": {"type": "string"},
+                "alumno_id":    {"type": "string"},
                 "nuevo_estado": {"type": "string", "description": "Siempre 'Matriculado'"},
                 "metadata": {
                     "type": "object",
@@ -77,8 +77,8 @@ tools = [
             "type": "object",
             "properties": {
                 "telefono": {"type": "string", "description": "WhatsApp del apoderado formato +51XXXXXXXXX"},
-                "pdf_url": {"type": "string", "description": "URL pública del PDF generado"},
-                "mensaje": {"type": "string", "description": "Mensaje de confirmación en español peruano"}
+                "pdf_url":  {"type": "string", "description": "URL pública del PDF generado"},
+                "mensaje":  {"type": "string", "description": "Mensaje de confirmación en español peruano"}
             },
             "required": ["telefono", "pdf_url", "mensaje"]
         }
@@ -93,7 +93,7 @@ def ejecutar_tool(nombre: str, inputs: dict, session_id: str = None):
     from tools.supabase_client import (
         actualizar_estado_alumno,
         obtener_alumno_por_id,
-        consultar_ciclo_por_codigo
+        consultar_ciclo_por_codigo,
     )
     from tools.evolution_whatsapp import enviar_documento
 
@@ -108,17 +108,30 @@ def ejecutar_tool(nombre: str, inputs: dict, session_id: str = None):
 
         elif nombre == "generar_constancia":
             alumno = obtener_alumno_por_id(inputs["alumno_id"])
-            ciclo = consultar_ciclo_por_codigo(inputs["ciclo_codigo"])
+            ciclo  = consultar_ciclo_por_codigo(inputs["ciclo_codigo"])
+
             if not alumno:
                 result = {"error": "Alumno no encontrado"}
             elif not ciclo:
                 result = {"error": "Ciclo no encontrado"}
             else:
-                pdf_path = generar_constancia(alumno, ciclo)
+                # generar_constancia ahora retorna dict:
+                # { archivo_local, url_publica, constancia_numero, error? }
+                gen = generar_constancia(alumno, ciclo)
+
+                if "error" in gen:
+                    # El PDF se generó localmente pero falló el upload a Supabase
+                    log.warning(
+                        f"[FIN] sid={sid} | generar_constancia upload fallido: {gen['error']}"
+                    )
+
                 result = {
-                    "pdf_url": pdf_path,
-                    "constancia_numero": os.path.basename(pdf_path).replace(".pdf", "")
+                    "pdf_url":           gen.get("url_publica") or gen.get("archivo_local"),
+                    "constancia_numero": gen["constancia_numero"],
+                    "archivo_local":     gen["archivo_local"],
                 }
+                if "error" in gen:
+                    result["upload_warning"] = gen["error"]
 
         elif nombre == "actualizar_estado":
             result = actualizar_estado_alumno(
@@ -189,12 +202,15 @@ def run_financiero_agent(input_text: str, historial: list = None, session_id: st
                     result = ejecutar_tool(block.name, block.input, session_id=sid)
                 except Exception as e:
                     result = {"error": f"Error interno al ejecutar '{block.name}': {str(e)}"}
-                    log.error(f"[FIN] sid={sid} | tool={block.name} | EXCEPTION={e}", exc_info=True)
+                    log.error(
+                        f"[FIN] sid={sid} | tool={block.name} | EXCEPTION={e}",
+                        exc_info=True
+                    )
 
                 tool_results.append({
-                    "type": "tool_result",
+                    "type":        "tool_result",
                     "tool_use_id": block.id,
-                    "content": json.dumps(result, ensure_ascii=False, default=str)
+                    "content":     json.dumps(result, ensure_ascii=False, default=str)
                 })
 
         messages.append({"role": "user", "content": tool_results})
