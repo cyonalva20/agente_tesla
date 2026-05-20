@@ -1,11 +1,14 @@
 import anthropic
 import os
 import json
+import time
 from dotenv import load_dotenv
+from tools.logger import get_logger
 
 load_dotenv()
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+log = get_logger("ADMIN")
 
 SYSTEM_PROMPT = """Eres el Agente Administrativo de Academia Tesla. Tu rol: validar la identidad del alumno y apoderado, y registrar el alumno en la base de datos.
 
@@ -61,23 +64,47 @@ tools = [
 ]
 
 
-def ejecutar_tool(nombre: str, inputs: dict):
+def ejecutar_tool(nombre: str, inputs: dict, session_id: str = None):
     """Despacha la ejecución de tools del agente Administrativo."""
     from tools.reniec import validar_dni
     from tools.supabase_client import upsert_alumno
 
-    if nombre == "validar_dni":
-        return validar_dni(inputs["dni"])
-    if nombre == "upsert_alumno":
-        return upsert_alumno(inputs)
-    return {"error": f"Tool '{nombre}' no reconocida"}
+    sid = session_id or "-"
+    inputs_log = json.dumps(inputs, ensure_ascii=False, default=str)[:300]
+    log.info(f"[ADMIN] sid={sid} | tool={nombre} | input={inputs_log}")
+    t0 = time.monotonic()
+
+    try:
+        if nombre == "validar_dni":
+            result = validar_dni(inputs["dni"])
+        elif nombre == "upsert_alumno":
+            result = upsert_alumno(inputs)
+        else:
+            result = {"error": f"Tool '{nombre}' no reconocida"}
+    except Exception as e:
+        ms = int((time.monotonic() - t0) * 1000)
+        log.error(f"[ADMIN] sid={sid} | tool={nombre} | EXCEPTION={e} | {ms}ms", exc_info=True)
+        return {"error": f"Error interno en '{nombre}': {str(e)}"}
+
+    ms = int((time.monotonic() - t0) * 1000)
+    result_log = json.dumps(result, ensure_ascii=False, default=str)[:400]
+    if "error" in result:
+        log.error(f"[ADMIN] sid={sid} | tool={nombre} | ERROR={result['error']} | {ms}ms")
+    else:
+        log.info(f"[ADMIN] sid={sid} | tool={nombre} | OK={result_log} | {ms}ms")
+
+    return result
 
 
-def run_admin_agent(datos: str, historial: list = []) -> str:
+def run_admin_agent(datos: str, historial: list = None, session_id: str = None) -> str:
     """
     Ejecuta el agente Administrativo con loop completo de tool_use.
     Recibe los datos del alumno/apoderado y retorna resultado de validación.
     """
+    historial = historial or []
+    sid = session_id or "-"
+    log.info(f"[ADMIN] sid={sid} | START | datos={datos[:120]}")
+
     messages = historial + [{"role": "user", "content": datos}]
 
     while True:
@@ -89,26 +116,29 @@ def run_admin_agent(datos: str, historial: list = []) -> str:
             messages=messages
         )
 
-        # Si el modelo terminó de responder, extraer texto final
         if response.stop_reason == "end_turn":
-            return next(
+            respuesta = next(
                 (b.text for b in response.content if b.type == "text"),
                 ""
             )
+            log.info(f"[ADMIN] sid={sid} | END | respuesta={respuesta[:200]}")
+            return respuesta
 
-        # Procesar tool_use: agregar respuesta del asistente
         messages.append({"role": "assistant", "content": response.content})
 
-        # Ejecutar cada tool y recopilar resultados
         tool_results = []
         for block in response.content:
             if block.type == "tool_use":
-                result = ejecutar_tool(block.name, block.input)
+                try:
+                    result = ejecutar_tool(block.name, block.input, session_id=sid)
+                except Exception as e:
+                    result = {"error": f"Error interno al ejecutar '{block.name}': {str(e)}"}
+                    log.error(f"[ADMIN] sid={sid} | tool={block.name} | EXCEPTION={e}", exc_info=True)
+
                 tool_results.append({
                     "type": "tool_result",
                     "tool_use_id": block.id,
                     "content": json.dumps(result, ensure_ascii=False, default=str)
                 })
 
-        # Enviar resultados de tools al modelo
         messages.append({"role": "user", "content": tool_results})

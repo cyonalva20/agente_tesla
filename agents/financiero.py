@@ -1,11 +1,14 @@
 import anthropic
 import os
 import json
+import time
 from dotenv import load_dotenv
+from tools.logger import get_logger
 
 load_dotenv()
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+log = get_logger("FIN")
 
 SYSTEM_PROMPT = """Eres el Agente Financiero de Academia Tesla. Tu rol: verificar pagos y emitir constancias de matrícula oficiales.
 
@@ -83,7 +86,7 @@ tools = [
 ]
 
 
-def ejecutar_tool(nombre: str, inputs: dict):
+def ejecutar_tool(nombre: str, inputs: dict, session_id: str = None):
     """Despacha la ejecución de tools del agente Financiero."""
     from tools.stripe_client import verificar_pago
     from tools.pdf_generator import generar_constancia
@@ -94,42 +97,70 @@ def ejecutar_tool(nombre: str, inputs: dict):
     )
     from tools.evolution_whatsapp import enviar_documento
 
-    if nombre == "verificar_pago":
-        return verificar_pago(inputs["charge_id"])
+    sid = session_id or "-"
+    inputs_log = json.dumps(inputs, ensure_ascii=False, default=str)[:300]
+    log.info(f"[FIN] sid={sid} | tool={nombre} | input={inputs_log}")
+    t0 = time.monotonic()
 
-    if nombre == "generar_constancia":
-        # Obtener datos completos de alumno y ciclo para el PDF
-        alumno = obtener_alumno_por_id(inputs["alumno_id"])
-        ciclo = consultar_ciclo_por_codigo(inputs["ciclo_codigo"])
-        if not alumno:
-            return {"error": "Alumno no encontrado"}
-        if not ciclo:
-            return {"error": "Ciclo no encontrado"}
-        pdf_path = generar_constancia(alumno, ciclo)
-        return {"pdf_url": pdf_path, "constancia_numero": os.path.basename(pdf_path).replace(".pdf", "")}
+    try:
+        if nombre == "verificar_pago":
+            result = verificar_pago(inputs["charge_id"])
 
-    if nombre == "actualizar_estado":
-        return actualizar_estado_alumno(
-            inputs["alumno_id"],
-            inputs["nuevo_estado"],
-            inputs.get("metadata", {})
-        )
+        elif nombre == "generar_constancia":
+            alumno = obtener_alumno_por_id(inputs["alumno_id"])
+            ciclo = consultar_ciclo_por_codigo(inputs["ciclo_codigo"])
+            if not alumno:
+                result = {"error": "Alumno no encontrado"}
+            elif not ciclo:
+                result = {"error": "Ciclo no encontrado"}
+            else:
+                pdf_path = generar_constancia(alumno, ciclo)
+                result = {
+                    "pdf_url": pdf_path,
+                    "constancia_numero": os.path.basename(pdf_path).replace(".pdf", "")
+                }
 
-    if nombre == "enviar_whatsapp":
-        return enviar_documento(
-            inputs["telefono"],
-            inputs["pdf_url"],
-            inputs["mensaje"]
-        )
+        elif nombre == "actualizar_estado":
+            result = actualizar_estado_alumno(
+                inputs["alumno_id"],
+                inputs["nuevo_estado"],
+                inputs.get("metadata", {})
+            )
 
-    return {"error": f"Tool '{nombre}' no reconocida"}
+        elif nombre == "enviar_whatsapp":
+            result = enviar_documento(
+                inputs["telefono"],
+                inputs["pdf_url"],
+                inputs["mensaje"]
+            )
+
+        else:
+            result = {"error": f"Tool '{nombre}' no reconocida"}
+
+    except Exception as e:
+        ms = int((time.monotonic() - t0) * 1000)
+        log.error(f"[FIN] sid={sid} | tool={nombre} | EXCEPTION={e} | {ms}ms", exc_info=True)
+        return {"error": f"Error interno en '{nombre}': {str(e)}"}
+
+    ms = int((time.monotonic() - t0) * 1000)
+    result_log = json.dumps(result, ensure_ascii=False, default=str)[:400]
+    if "error" in result:
+        log.error(f"[FIN] sid={sid} | tool={nombre} | ERROR={result['error']} | {ms}ms")
+    else:
+        log.info(f"[FIN] sid={sid} | tool={nombre} | OK={result_log} | {ms}ms")
+
+    return result
 
 
-def run_financiero_agent(input_text: str, historial: list = []) -> str:
+def run_financiero_agent(input_text: str, historial: list = None, session_id: str = None) -> str:
     """
     Ejecuta el agente Financiero con loop completo de tool_use.
     Recibe datos de pago y retorna confirmación o error.
     """
+    historial = historial or []
+    sid = session_id or "-"
+    log.info(f"[FIN] sid={sid} | START | input={input_text[:120]}")
+
     messages = historial + [{"role": "user", "content": input_text}]
 
     while True:
@@ -141,26 +172,29 @@ def run_financiero_agent(input_text: str, historial: list = []) -> str:
             messages=messages
         )
 
-        # Si el modelo terminó de responder, extraer texto final
         if response.stop_reason == "end_turn":
-            return next(
+            respuesta = next(
                 (b.text for b in response.content if b.type == "text"),
                 ""
             )
+            log.info(f"[FIN] sid={sid} | END | respuesta={respuesta[:200]}")
+            return respuesta
 
-        # Procesar tool_use: agregar respuesta del asistente
         messages.append({"role": "assistant", "content": response.content})
 
-        # Ejecutar cada tool y recopilar resultados
         tool_results = []
         for block in response.content:
             if block.type == "tool_use":
-                result = ejecutar_tool(block.name, block.input)
+                try:
+                    result = ejecutar_tool(block.name, block.input, session_id=sid)
+                except Exception as e:
+                    result = {"error": f"Error interno al ejecutar '{block.name}': {str(e)}"}
+                    log.error(f"[FIN] sid={sid} | tool={block.name} | EXCEPTION={e}", exc_info=True)
+
                 tool_results.append({
                     "type": "tool_result",
                     "tool_use_id": block.id,
                     "content": json.dumps(result, ensure_ascii=False, default=str)
                 })
 
-        # Enviar resultados de tools al modelo
         messages.append({"role": "user", "content": tool_results})

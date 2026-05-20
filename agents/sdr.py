@@ -1,11 +1,15 @@
 import anthropic
 import os
 import json
+import time
 from dotenv import load_dotenv
+from tools.logger import get_logger
+from anthropic._exceptions import OverloadedError, RateLimitError
 
 load_dotenv()
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+log = get_logger("SDR")
 
 SYSTEM_PROMPT = """Eres el Agente SDR (Sales Development Representative) de Academia Tesla, un centro preuniversitario peruano.
 Tu rol: calificar prospectos, identificar el grado del alumno, recomendar el ciclo adecuado y registrar el lead en CRM.
@@ -28,7 +32,10 @@ tools = [
             "properties": {
                 "grado": {
                     "type": "string",
-                    "description": "Grado del alumno. Valores válidos: cepu, 5to_secundaria, 4to_secundaria, repaso, pre_universitario"
+                    "description": (
+                        "Grado del alumno. Valores válidos: "
+                        "cepu, 5to_secundaria, 4to_secundaria, repaso, pre_universitario"
+                    )
                 }
             },
             "required": ["grado"]
@@ -40,10 +47,22 @@ tools = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "nombre_apoderado": {"type": "string", "description": "Nombre completo del apoderado"},
-                "telefono": {"type": "string", "description": "WhatsApp con formato +51XXXXXXXXX"},
-                "grado": {"type": "string", "description": "Grado escolar del alumno"},
-                "ciclo_recomendado": {"type": "string", "description": "Código del ciclo recomendado, ej: G-SEC5-2025-B"}
+                "nombre_apoderado": {
+                    "type": "string",
+                    "description": "Nombre completo del apoderado"
+                },
+                "telefono": {
+                    "type": "string",
+                    "description": "WhatsApp con formato +51XXXXXXXXX"
+                },
+                "grado": {
+                    "type": "string",
+                    "description": "Grado escolar del alumno en formato canónico, ej: 5to_secundaria"
+                },
+                "ciclo_recomendado": {
+                    "type": "string",
+                    "description": "Código del ciclo recomendado, ej: G-SEC5-2025-B"
+                }
             },
             "required": ["nombre_apoderado", "telefono", "grado", "ciclo_recomendado"]
         }
@@ -51,32 +70,72 @@ tools = [
 ]
 
 
-def ejecutar_tool(nombre: str, inputs: dict):
+def ejecutar_tool(nombre: str, inputs: dict, session_id: str = None):
     """Despacha la ejecución de tools del agente SDR."""
-    from tools.supabase_client import consultar_ciclos
+    from tools.supabase_client import consultar_ciclos, normalizar_grado
     from tools.pipedrive_client import registrar_lead
 
+    sid = session_id or "-"
+    inputs_log = json.dumps(inputs, ensure_ascii=False, default=str)[:300]
+    log.info(f"[SDR] sid={sid} | tool={nombre} | input={inputs_log}")
+    t0 = time.monotonic()
+
     if nombre == "consultar_ciclos":
-        return consultar_ciclos(inputs["grado"])
-    if nombre == "registrar_lead":
-        return registrar_lead(
+        grado = normalizar_grado(inputs["grado"])
+        result = consultar_ciclos(grado)
+    elif nombre == "registrar_lead":
+        result = registrar_lead(
             inputs["nombre_apoderado"],
             inputs["telefono"],
             inputs["grado"],
             inputs["ciclo_recomendado"]
         )
-    return {"error": f"Tool '{nombre}' no reconocida"}
+    else:
+        result = {"error": f"Tool '{nombre}' no reconocida"}
+
+    ms = int((time.monotonic() - t0) * 1000)
+    result_log = json.dumps(result, ensure_ascii=False, default=str)[:400]
+    if "error" in result:
+        log.error(f"[SDR] sid={sid} | tool={nombre} | ERROR={result['error']} | {ms}ms")
+    else:
+        log.info(f"[SDR] sid={sid} | tool={nombre} | OK={result_log} | {ms}ms")
+
+    return result
 
 
-def run_sdr_agent(consulta: str, historial: list = []) -> str:
-    """
-    Ejecuta el agente SDR con loop completo de tool_use.
-    Recibe la consulta del prospecto y retorna la respuesta final.
-    """
+
+
+def _llamar_anthropic_con_retry(client, max_reintentos: int = 3, **kwargs):
+    for intento in range(max_reintentos):
+        try:
+            return client.messages.create(**kwargs)
+        except OverloadedError:                        # ✅ sin anthropic.
+            if intento == max_reintentos - 1:
+                raise
+            espera = 2 ** (intento + 1)
+            print(f"[SDR] API sobrecargada, reintento {intento + 1}/{max_reintentos} en {espera}s...")
+            time.sleep(espera)
+        except RateLimitError:                         # ✅ sin anthropic.
+            if intento == max_reintentos - 1:
+                raise
+            espera = 2 ** (intento + 2)
+            print(f"[SDR] Rate limit, reintento {intento + 1}/{max_reintentos} en {espera}s...")
+            time.sleep(espera)
+
+
+def run_sdr_agent(
+    consulta: str,
+    historial: list = None,
+    session_id: str = None
+) -> str:
+    historial = historial or []
     messages = historial + [{"role": "user", "content": consulta}]
 
     while True:
-        response = client.messages.create(
+        # ✅ Reemplaza client.messages.create(...) por esto:
+        response = _llamar_anthropic_con_retry(
+            client,
+            max_reintentos=3,
             model="claude-haiku-4-5-20251001",
             max_tokens=1024,
             system=SYSTEM_PROMPT,
@@ -84,26 +143,28 @@ def run_sdr_agent(consulta: str, historial: list = []) -> str:
             messages=messages
         )
 
-        # Si el modelo terminó de responder, extraer texto final
         if response.stop_reason == "end_turn":
             return next(
                 (b.text for b in response.content if b.type == "text"),
                 ""
             )
 
-        # Procesar tool_use: agregar respuesta del asistente
         messages.append({"role": "assistant", "content": response.content})
 
-        # Ejecutar cada tool y recopilar resultados
         tool_results = []
         for block in response.content:
             if block.type == "tool_use":
-                result = ejecutar_tool(block.name, block.input)
+                try:
+                    result = ejecutar_tool(block.name, block.input, session_id=session_id)
+                except ValueError as e:
+                    result = {"error": str(e)}
+                except Exception as e:
+                    result = {"error": f"Error interno al ejecutar '{block.name}': {str(e)}"}
+
                 tool_results.append({
-                    "type": "tool_result",
+                    "type":        "tool_result",
                     "tool_use_id": block.id,
-                    "content": json.dumps(result, ensure_ascii=False, default=str)
+                    "content":     json.dumps(result, ensure_ascii=False, default=str)
                 })
 
-        # Enviar resultados de tools al modelo
         messages.append({"role": "user", "content": tool_results})

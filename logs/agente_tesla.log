@@ -1,0 +1,354 @@
+2026-05-20 01:12:05 | INFO  | [TEST] Logger funciona correctamente
+2026-05-20 01:12:05 | WARNING | [TEST] Warning de prueba
+2026-05-20 01:12:05 | ERROR | [TEST] Error de prueba
+2026-05-20 01:15:20 | INFO  | [ORCH] sid=04daef79-e769-406c-b4fa-b355b519fb6c | MENSAJE | fase=CAPTACION | msg=Hola
+2026-05-20 01:15:28 | INFO  | [ORCH] sid=04daef79-e769-406c-b4fa-b355b519fb6c | → agente_sdr | fase=CAPTACION | input={"consulta": "Un prospecto nuevo saluda y se pone en contacto por primera vez. Brindarle una bienvenida e informarle sobre los ciclos académicos disponibles, precios y horarios de Academia Tesla."}
+2026-05-20 01:15:28 | INFO  | [SDR] sid=04daef79-e769-406c-b4fa-b355b519fb6c | START | consulta=Un prospecto nuevo saluda y se pone en contacto por primera vez. Brindarle una bienvenida e informarle sobre los ciclos 
+2026-05-20 01:15:30 | INFO  | [SDR] sid=04daef79-e769-406c-b4fa-b355b519fb6c | END | respuesta=¡Bienvenido a Academia Tesla! 🎓
+
+Es un placer saludarle. Somos un centro preuniversitario de excelencia comprometido con la formación académica integral de nuestros estudiantes.
+
+Para poder recomendar
+2026-05-20 01:15:30 | INFO  | [ORCH] sid=04daef79-e769-406c-b4fa-b355b519fb6c | ← agente_sdr | OK 721 chars | 2599ms
+2026-05-20 01:15:35 | INFO  | [ORCH] sid=04daef79-e769-406c-b4fa-b355b519fb6c | RESPUESTA | fase=CAPTACION | ¡Bienvenido/a! 😊 Es un gusto atenderte. En **Academia Tesla** contamos con programas académicos diseñados para diferentes niveles y necesidades.
+
+Para
+2026-05-20 01:15:55 | INFO  | [ORCH] sid=04daef79-e769-406c-b4fa-b355b519fb6c | MENSAJE | fase=CAPTACION | msg=5to de secundaria
+2026-05-20 01:15:58 | INFO  | [ORCH] sid=04daef79-e769-406c-b4fa-b355b519fb6c | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto tiene un estudiante en 5to de secundaria y desea conocer los ciclos académicos, precios y horarios disponibles para ese nivel."}
+2026-05-20 01:15:58 | INFO  | [SDR] sid=04daef79-e769-406c-b4fa-b355b519fb6c | START | consulta=El prospecto tiene un estudiante en 5to de secundaria y desea conocer los ciclos académicos, precios y horarios disponib
+2026-05-20 01:15:59 | INFO  | [SDR] sid=04daef79-e769-406c-b4fa-b355b519fb6c | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-05-20 01:16:01 | ERROR | [SDR] sid=04daef79-e769-406c-b4fa-b355b519fb6c | tool=consultar_ciclos | EXCEPTION={'message': 'Invalid path specified in request URL', 'code': 'PGRST125', 'hint': None, 'details': None}
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 143, in run_sdr_agent
+    result = ejecutar_tool(block.name, block.input, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 84, in ejecutar_tool
+    result = consultar_ciclos(grado)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\tools\supabase_client.py", line 73, in consultar_ciclos
+    .execute()
+     ~~~~~~~^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\postgrest\_sync\request_builder.py", line 96, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': 'Invalid path specified in request URL', 'code': 'PGRST125', 'hint': None, 'details': None}
+2026-05-20 01:16:02 | INFO  | [SDR] sid=04daef79-e769-406c-b4fa-b355b519fb6c | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-05-20 01:16:02 | ERROR | [SDR] sid=04daef79-e769-406c-b4fa-b355b519fb6c | tool=consultar_ciclos | EXCEPTION={'message': 'Invalid path specified in request URL', 'code': 'PGRST125', 'hint': None, 'details': None}
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 143, in run_sdr_agent
+    result = ejecutar_tool(block.name, block.input, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 84, in ejecutar_tool
+    result = consultar_ciclos(grado)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\tools\supabase_client.py", line 73, in consultar_ciclos
+    .execute()
+     ~~~~~~~^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\postgrest\_sync\request_builder.py", line 96, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': 'Invalid path specified in request URL', 'code': 'PGRST125', 'hint': None, 'details': None}
+2026-05-20 01:16:07 | INFO  | [SDR] sid=04daef79-e769-406c-b4fa-b355b519fb6c | END | respuesta=Lamento el inconveniente técnico. Parece que hay un problema con la conexión a la base de datos de Supabase en este momento. 
+
+**¿Qué puedo hacer en su lugar?**
+
+Le recomendaría que:
+1. **Me proporcio
+2026-05-20 01:16:07 | INFO  | [ORCH] sid=04daef79-e769-406c-b4fa-b355b519fb6c | ← agente_sdr | OK 730 chars | 8479ms
+2026-05-20 01:16:12 | INFO  | [ORCH] sid=04daef79-e769-406c-b4fa-b355b519fb6c | RESPUESTA | fase=REGISTRO | Estamos teniendo un pequeño inconveniente técnico al conectarnos a nuestra base de datos en este momento 😅. Pero no te preocupes, ¡no queremos dejarte
+2026-05-20 01:25:55 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | MENSAJE | fase=CAPTACION | msg=Hola
+2026-05-20 01:25:59 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | RESPUESTA | fase=CAPTACION | ¡Hola! Bienvenido/a a **Academia Tesla** 🎓
+
+Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícula, desde informarte sobre n
+2026-05-20 01:26:20 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | MENSAJE | fase=CAPTACION | msg=ciclos academicos
+2026-05-20 01:26:23 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está preguntando sobre los ciclos académicos disponibles en Academia Tesla. Es un usuario nuevo que quiere conocer los ciclos, fechas de inicio, horarios y precios disponibles."}
+2026-05-20 01:26:23 | INFO  | [SDR] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | START | consulta=El prospecto está preguntando sobre los ciclos académicos disponibles en Academia Tesla. Es un usuario nuevo que quiere 
+2026-05-20 01:26:26 | INFO  | [SDR] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | END | respuesta=¡Bienvenido a Academia Tesla! 🎓 Me da gusto poder ayudarte con información sobre nuestros ciclos académicos.
+
+Para recomendarte las opciones más adecuadas, necesito conocer un detalle importante:
+
+**¿
+2026-05-20 01:26:26 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | ← agente_sdr | OK 594 chars | 2237ms
+2026-05-20 01:26:29 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | RESPUESTA | fase=CAPTACION | ¡Excelente! Para mostrarte los ciclos más adecuados, necesitamos un pequeño dato 😊:
+
+**¿En qué grado se encuentra el alumno?** Contamos con programas 
+2026-05-20 01:26:38 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | MENSAJE | fase=CAPTACION | msg=5to de secundaria
+2026-05-20 01:26:41 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en conocer los ciclos académicos disponibles para 5to de Secundaria. Por favor, proporciona información sobre ciclos, precios, horarios y fechas de inicio disponibles para ese grado."}
+2026-05-20 01:26:41 | INFO  | [SDR] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | START | consulta=El prospecto está interesado en conocer los ciclos académicos disponibles para 5to de Secundaria. Por favor, proporciona
+2026-05-20 01:26:42 | INFO  | [SDR] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-05-20 01:26:42 | ERROR | [SDR] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | tool=consultar_ciclos | EXCEPTION={'message': 'Invalid path specified in request URL', 'code': 'PGRST125', 'hint': None, 'details': None}
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 143, in run_sdr_agent
+    result = ejecutar_tool(block.name, block.input, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 84, in ejecutar_tool
+    result = consultar_ciclos(grado)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\tools\supabase_client.py", line 73, in consultar_ciclos
+    .execute()
+     ~~~~~~~^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\postgrest\_sync\request_builder.py", line 96, in execute
+    raise APIError(dict(json_obj))
+postgrest.exceptions.APIError: {'message': 'Invalid path specified in request URL', 'code': 'PGRST125', 'hint': None, 'details': None}
+2026-05-20 01:26:46 | INFO  | [SDR] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | END | respuesta=Disculpe, estoy experimentando un inconveniente técnico al acceder a la base de datos en este momento. Sin embargo, puedo ayudarle de la siguiente manera:
+
+**Para completar la consulta de ciclos de 5t
+2026-05-20 01:26:46 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | ← agente_sdr | OK 871 chars | 5239ms
+2026-05-20 01:26:50 | INFO  | [ORCH] sid=a94e01b5-4cd1-42a1-bbc7-7993ac7e2606 | RESPUESTA | fase=CAPTACION | Lamentamos el inconveniente técnico momentáneo. Para poder darte la información más precisa mientras se resuelve, ayúdanos con unos datos adicionales 
+2026-05-20 01:40:12 | INFO  | [ORCH] sid=d484f58e-d332-41e2-8532-66d9868e6eb5 | MENSAJE | fase=CAPTACION | msg=Hola
+2026-05-20 01:40:15 | INFO  | [ORCH] sid=d484f58e-d332-41e2-8532-66d9868e6eb5 | RESPUESTA | fase=CAPTACION | ¡Hola! 👋 Bienvenido/a a **Academia Tesla** 🎓
+
+Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícula, desde informarte sobre
+2026-05-20 01:41:50 | INFO  | [ORCH] sid=d484f58e-d332-41e2-8532-66d9868e6eb5 | MENSAJE | fase=CAPTACION | msg=ciclos disponibles
+2026-05-20 01:41:54 | INFO  | [ORCH] sid=d484f58e-d332-41e2-8532-66d9868e6eb5 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está preguntando por los ciclos académicos disponibles en Academia Tesla. Es un usuario nuevo que desea conocer la oferta académica actual."}
+2026-05-20 01:41:54 | INFO  | [SDR] sid=d484f58e-d332-41e2-8532-66d9868e6eb5 | START | consulta=El prospecto está preguntando por los ciclos académicos disponibles en Academia Tesla. Es un usuario nuevo que desea con
+2026-05-20 01:42:04 | ERROR | [ORCH] sid=d484f58e-d332-41e2-8532-66d9868e6eb5 | ← agente_sdr | EXCEPTION=Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDN9fwm31nriDETszHBY'} | 10550ms
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\orchestrator.py", line 200, in _ejecutar_sub_agente
+    result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 121, in run_sdr_agent
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+    ...<3 lines>...
+        messages=messages
+    )
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_utils\_utils.py", line 294, in wrapper
+    return func(*args, **kwargs)
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\resources\messages\messages.py", line 1003, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/v1/messages",
+        ^^^^^^^^^^^^^^^
+    ...<30 lines>...
+        stream_cls=Stream[RawMessageStreamEvent],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1374, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1147, in request
+    raise self._make_status_error_from_response(err.response) from None
+anthropic._exceptions.OverloadedError: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDN9fwm31nriDETszHBY'}
+2026-05-20 01:42:09 | INFO  | [ORCH] sid=d484f58e-d332-41e2-8532-66d9868e6eb5 | RESPUESTA | fase=CAPTACION | Ups, parece que en este momento hay un pequeño inconveniente técnico al consultar la información 😅. Estamos teniendo alta demanda en el sistema.
+
+¿Me 
+2026-05-20 01:46:05 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | MENSAJE | fase=CAPTACION | msg=Hola
+2026-05-20 01:46:09 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | RESPUESTA | fase=CAPTACION | ¡Hola! Bienvenido/a a **Academia Tesla** 🎓
+
+Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícula de manera rápida y sencil
+2026-05-20 01:46:21 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | MENSAJE | fase=CAPTACION | msg=sobres los ciclos disponibles porfa
+2026-05-20 01:46:24 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto quiere conocer información sobre los ciclos académicos disponibles en Academia Tesla: ciclos, precios y horarios."}
+2026-05-20 01:46:24 | INFO  | [SDR] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | START | consulta=El prospecto quiere conocer información sobre los ciclos académicos disponibles en Academia Tesla: ciclos, precios y hor
+2026-05-20 01:46:27 | INFO  | [SDR] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | END | respuesta=¡Hola! 🎓 Bienvenido a Academia Tesla.
+
+Para recomendarle los ciclos académicos más adecuados, necesito conocer un dato importante:
+
+**¿En qué grado escolar se encuentra el alumno?**
+
+Los grados que ma
+2026-05-20 01:46:27 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | ← agente_sdr | OK 527 chars | 3295ms
+2026-05-20 01:46:31 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | RESPUESTA | fase=CAPTACION | ¡Excelente pregunta! Para mostrarte los ciclos más adecuados, necesitamos saber un dato clave:
+
+**¿En qué grado escolar se encuentra el alumno?** Los 
+2026-05-20 01:46:46 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | MENSAJE | fase=CAPTACION | msg=5to de secundaria
+2026-05-20 01:46:49 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en conocer los ciclos disponibles para 5to de secundaria. Por favor, bríndale información sobre los ciclos académicos, precios y horarios disponibles para ese grado."}
+2026-05-20 01:46:49 | INFO  | [SDR] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | START | consulta=El prospecto está interesado en conocer los ciclos disponibles para 5to de secundaria. Por favor, bríndale información s
+2026-05-20 01:46:52 | INFO  | [SDR] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-05-20 01:46:53 | INFO  | [SDR] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | tool=consultar_ciclos | OK=[{"codigo": "G-SEC5-2025-A", "nombre": "Preparación 5to Secundaria - Básico", "grado": "5to_secundaria", "precio_soles": 600, "horario": "Sábados y Domingos 9:00am - 1:00pm", "fecha_inicio": "2026-05-02", "vacantes_disponibles": 40, "modalidad": "virtual"}, {"codigo": "G-SEC5-2025-B", "nombre": "Preparación 5to Secundaria - Intensivo", "grado": "5to_secundaria", "precio_soles": 750, "horario": "Lu | 1314ms
+2026-05-20 01:47:01 | ERROR | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | ← agente_sdr | EXCEPTION=Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDNXWrBD7AmVs4CT5UM1'} | 12267ms
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\orchestrator.py", line 200, in _ejecutar_sub_agente
+    result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 121, in run_sdr_agent
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+    ...<3 lines>...
+        messages=messages
+    )
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_utils\_utils.py", line 294, in wrapper
+    return func(*args, **kwargs)
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\resources\messages\messages.py", line 1003, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/v1/messages",
+        ^^^^^^^^^^^^^^^
+    ...<30 lines>...
+        stream_cls=Stream[RawMessageStreamEvent],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1374, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1147, in request
+    raise self._make_status_error_from_response(err.response) from None
+anthropic._exceptions.OverloadedError: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDNXWrBD7AmVs4CT5UM1'}
+2026-05-20 01:47:04 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en conocer los ciclos disponibles para 5to de secundaria. Por favor, bríndale información sobre los ciclos académicos, precios y horarios disponibles para ese grado."}
+2026-05-20 01:47:04 | INFO  | [SDR] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | START | consulta=El prospecto está interesado en conocer los ciclos disponibles para 5to de secundaria. Por favor, bríndale información s
+2026-05-20 01:47:07 | INFO  | [SDR] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-05-20 01:47:07 | INFO  | [SDR] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | tool=consultar_ciclos | OK=[{"codigo": "G-SEC5-2025-A", "nombre": "Preparación 5to Secundaria - Básico", "grado": "5to_secundaria", "precio_soles": 600, "horario": "Sábados y Domingos 9:00am - 1:00pm", "fecha_inicio": "2026-05-02", "vacantes_disponibles": 40, "modalidad": "virtual"}, {"codigo": "G-SEC5-2025-B", "nombre": "Preparación 5to Secundaria - Intensivo", "grado": "5to_secundaria", "precio_soles": 750, "horario": "Lu | 163ms
+2026-05-20 01:47:15 | ERROR | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | ← agente_sdr | EXCEPTION=Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDNYaKZcZqf9L12R6ENz'} | 10362ms
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\orchestrator.py", line 200, in _ejecutar_sub_agente
+    result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 121, in run_sdr_agent
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+    ...<3 lines>...
+        messages=messages
+    )
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_utils\_utils.py", line 294, in wrapper
+    return func(*args, **kwargs)
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\resources\messages\messages.py", line 1003, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/v1/messages",
+        ^^^^^^^^^^^^^^^
+    ...<30 lines>...
+        stream_cls=Stream[RawMessageStreamEvent],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1374, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1147, in request
+    raise self._make_status_error_from_response(err.response) from None
+anthropic._exceptions.OverloadedError: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDNYaKZcZqf9L12R6ENz'}
+2026-05-20 01:47:22 | INFO  | [ORCH] sid=5643ad89-a43e-46f4-ac74-ecf7a4d1520b | RESPUESTA | fase=CAPTACION | ⚠️ **Estamos presentando dificultades técnicas en este momento.**
+
+Lamentablemente, nuestro sistema está experimentando alta demanda y no puedo obtene
+2026-05-20 01:54:18 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | MENSAJE | fase=CAPTACION | msg=Hola
+2026-05-20 01:54:22 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | RESPUESTA | fase=CAPTACION | ¡Hola! 👋 Bienvenido/a a **Academia Tesla** 🎓
+
+Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícula de manera rápida y senc
+2026-05-20 01:54:29 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | MENSAJE | fase=CAPTACION | msg=que ciclos tienen
+2026-05-20 01:54:31 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto quiere saber qué ciclos académicos tienen disponibles en Academia Tesla."}
+2026-05-20 01:54:35 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | ← agente_sdr | OK 560 chars | 3832ms
+2026-05-20 01:54:39 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | RESPUESTA | fase=CAPTACION | ¡Genial! Para mostrarte los ciclos más adecuados, necesito una pequeña información 😊:
+
+**¿En qué grado escolar se encuentra el alumno?**
+
+Contamos con
+2026-05-20 01:54:51 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | MENSAJE | fase=CAPTACION | msg=esta en 5to de secundaria
+2026-05-20 01:54:54 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en conocer los ciclos académicos disponibles para un alumno de 5to de secundaria. Por favor bríndale información sobre ciclos, precios y horarios disponibles para ese grado."}
+2026-05-20 01:55:03 | INFO  | [SDR] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-05-20 01:55:04 | INFO  | [SDR] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | tool=consultar_ciclos | OK=[{"codigo": "G-SEC5-2025-A", "nombre": "Preparación 5to Secundaria - Básico", "grado": "5to_secundaria", "precio_soles": 600, "horario": "Sábados y Domingos 9:00am - 1:00pm", "fecha_inicio": "2026-05-02", "vacantes_disponibles": 40, "modalidad": "virtual"}, {"codigo": "G-SEC5-2025-B", "nombre": "Preparación 5to Secundaria - Intensivo", "grado": "5to_secundaria", "precio_soles": 750, "horario": "Lu | 1116ms
+2026-05-20 01:55:07 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | ← agente_sdr | OK 953 chars | 12950ms
+2026-05-20 01:55:12 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | RESPUESTA | fase=CAPTACION | ¡Aquí tienes las opciones disponibles para **5to de Secundaria**! 📚
+
+---
+
+**OPCIÓN 1 — Básico** 🗓️
+- **Código:** G-SEC5-2025-A
+- **Precio:** S/ 600
+- 
+2026-05-20 01:56:33 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | MENSAJE | fase=CAPTACION | msg=me gustaria el de sabados y domingos
+2026-05-20 01:56:38 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en inscribir a un alumno de 5to de secundaria. Ha seleccionado el ciclo de Sábados y Domingos (Código: G-SEC5-2025-A, Precio: S/ 600, Horario: Sábados y Domingos 9:00 am - 1:00 pm, Modalidad: Virtual, Inicio: 2 de mayo de 2026). Solicita continuar con el pr
+2026-05-20 01:56:45 | ERROR | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | ← agente_sdr | EXCEPTION=module 'anthropic' has no attribute 'OverloadedError' | 7914ms
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 112, in _llamar_anthropic_con_retry
+    return client.messages.create(**kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_utils\_utils.py", line 294, in wrapper
+    return func(*args, **kwargs)
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\resources\messages\messages.py", line 1003, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/v1/messages",
+        ^^^^^^^^^^^^^^^
+    ...<30 lines>...
+        stream_cls=Stream[RawMessageStreamEvent],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1374, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1147, in request
+    raise self._make_status_error_from_response(err.response) from None
+anthropic._exceptions.OverloadedError: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDPGZqTk4DKZ2o6LDkDa'}
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\orchestrator.py", line 200, in _ejecutar_sub_agente
+    result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 137, in run_sdr_agent
+    response = _llamar_anthropic_con_retry(
+        client,
+    ...<5 lines>...
+        messages=messages
+    )
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 113, in _llamar_anthropic_con_retry
+    except anthropic.OverloadedError as e:
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'anthropic' has no attribute 'OverloadedError'
+2026-05-20 01:56:49 | INFO  | [ORCH] sid=8cea4259-a640-4aa0-881e-d1083dacb083 | RESPUESTA | fase=REGISTRO | Parece que tuvimos un pequeño inconveniente técnico al conectar con nuestro sistema. 😅 No te preocupes, ya tenemos registrada tu preferencia:
+
+✅ **Cic
+2026-05-20 02:00:28 | INFO  | [ORCH] sid=24ade2ff-510d-4d55-9a71-9f93af4b4b58 | MENSAJE | fase=CAPTACION | msg=Hola
+2026-05-20 02:00:33 | INFO  | [ORCH] sid=24ade2ff-510d-4d55-9a71-9f93af4b4b58 | RESPUESTA | fase=CAPTACION | ¡Hola! 👋 Bienvenido/a a **Academia Tesla** 🎓
+
+Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícula, desde informarte sobre
+2026-05-20 02:01:07 | INFO  | [ORCH] sid=24ade2ff-510d-4d55-9a71-9f93af4b4b58 | MENSAJE | fase=CAPTACION | msg=info sobre los ciclos academicos
+2026-05-20 02:01:10 | INFO  | [ORCH] sid=24ade2ff-510d-4d55-9a71-9f93af4b4b58 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto quiere información sobre los ciclos académicos disponibles en Academia Tesla: horarios, precios y modalidades."}
+2026-05-20 02:01:40 | ERROR | [ORCH] sid=24ade2ff-510d-4d55-9a71-9f93af4b4b58 | ← agente_sdr | EXCEPTION=Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDPeLnWCPFVSG5ypymGt'} | 30273ms
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\orchestrator.py", line 200, in _ejecutar_sub_agente
+    result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 136, in run_sdr_agent
+    response = _llamar_anthropic_con_retry(
+        client,
+    ...<5 lines>...
+        messages=messages
+    )
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 111, in _llamar_anthropic_con_retry
+    return client.messages.create(**kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_utils\_utils.py", line 294, in wrapper
+    return func(*args, **kwargs)
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\resources\messages\messages.py", line 1003, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/v1/messages",
+        ^^^^^^^^^^^^^^^
+    ...<30 lines>...
+        stream_cls=Stream[RawMessageStreamEvent],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1374, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1147, in request
+    raise self._make_status_error_from_response(err.response) from None
+anthropic._exceptions.OverloadedError: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDPeLnWCPFVSG5ypymGt'}
+2026-05-20 02:01:43 | INFO  | [ORCH] sid=24ade2ff-510d-4d55-9a71-9f93af4b4b58 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto quiere información sobre los ciclos académicos disponibles en Academia Tesla: horarios, precios y modalidades."}
+2026-05-20 02:02:14 | ERROR | [ORCH] sid=24ade2ff-510d-4d55-9a71-9f93af4b4b58 | ← agente_sdr | EXCEPTION=Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDPgq4fgCtXrQ1HMbAVM'} | 31338ms
+Traceback (most recent call last):
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\orchestrator.py", line 200, in _ejecutar_sub_agente
+    result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid)
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 136, in run_sdr_agent
+    response = _llamar_anthropic_con_retry(
+        client,
+    ...<5 lines>...
+        messages=messages
+    )
+  File "d:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\agents\sdr.py", line 111, in _llamar_anthropic_con_retry
+    return client.messages.create(**kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_utils\_utils.py", line 294, in wrapper
+    return func(*args, **kwargs)
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\resources\messages\messages.py", line 1003, in create
+    return self._post(
+           ~~~~~~~~~~^
+        "/v1/messages",
+        ^^^^^^^^^^^^^^^
+    ...<30 lines>...
+        stream_cls=Stream[RawMessageStreamEvent],
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1374, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\DATA - DISCO E\Documentos\Ing. Sistemas\Malla 2025-10\CICLO 7\AUTOMA\agente_tesla\.venv\Lib\site-packages\anthropic\_base_client.py", line 1147, in request
+    raise self._make_status_error_from_response(err.response) from None
+anthropic._exceptions.OverloadedError: Error code: 529 - {'type': 'error', 'error': {'type': 'overloaded_error', 'message': 'Overloaded'}, 'request_id': 'req_011CbDPgq4fgCtXrQ1HMbAVM'}
+2026-05-20 02:02:19 | INFO  | [ORCH] sid=24ade2ff-510d-4d55-9a71-9f93af4b4b58 | RESPUESTA | fase=CAPTACION | ⚠️ **Aviso importante**
+
+Lamentablemente, nuestro sistema está experimentando dificultades técnicas en este momento y hemos alcanzado el límite de rei
