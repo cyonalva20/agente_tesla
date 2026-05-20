@@ -2,16 +2,21 @@ import anthropic
 import os
 import json
 import uuid
+import time
 from dotenv import load_dotenv
 from agents.sdr import run_sdr_agent
 from agents.administrativo import run_admin_agent
 from agents.financiero import run_financiero_agent
 from tools.supabase_client import actualizar_estado_alumno
 from tools.evolution_whatsapp import enviar_mensaje
+from tools.logger import get_logger
 
 load_dotenv()
 
 client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+log = get_logger("ORCH")
+
+MAX_TOOL_ROUNDS = 10
 
 SYSTEM_PROMPT_ORQUESTADOR = """
 Eres el Orquestador de Matrículas de Academia Tesla. Coordinas 3 sub-agentes especializados para guiar al prospecto desde el primer contacto hasta la matrícula completa.
@@ -179,32 +184,41 @@ class Orchestrator:
             else:
                 self.session_data["intentos_fallidos"] = 0
 
-        except Exception:
-            pass
+        except Exception as e:
+            log.warning(f"[ORCH] sid={self.session_data['session_id']} | _extraer_datos error={e}")
 
     def _ejecutar_sub_agente(self, tool_name: str, inputs: dict) -> str:
         """Ejecuta el sub-agente correspondiente y retorna su resultado."""
-        # Pasar los últimos 6 mensajes como contexto al sub-agente
         contexto = self.historial[-6:] if len(self.historial) > 6 else []
+        sid = self.session_data["session_id"]
+        inputs_log = json.dumps(inputs, ensure_ascii=False, default=str)[:300]
+        log.info(f"[ORCH] sid={sid} | → {tool_name} | fase={self.session_data['fase']} | input={inputs_log}")
+        t0 = time.monotonic()
 
         try:
             if tool_name == "agente_sdr":
-                result = run_sdr_agent(inputs["consulta"], contexto)
+                result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid)
             elif tool_name == "agente_administrativo":
-                result = run_admin_agent(inputs["datos"], contexto)
+                result = run_admin_agent(inputs["datos"], contexto, session_id=sid)
             elif tool_name == "agente_financiero":
-                result = run_financiero_agent(inputs["instruccion"], contexto)
+                result = run_financiero_agent(inputs["instruccion"], contexto, session_id=sid)
             else:
                 result = json.dumps({"error": f"Sub-agente '{tool_name}' no reconocido"})
 
-            # Actualizar datos de sesión según el resultado
-            self._extraer_datos_de_resultado(tool_name, result)
+            ms = int((time.monotonic() - t0) * 1000)
+            if '"error"' in result:
+                log.warning(f"[ORCH] sid={sid} | ← {tool_name} | contiene error | {ms}ms | {result[:300]}")
+            else:
+                log.info(f"[ORCH] sid={sid} | ← {tool_name} | OK {len(result)} chars | {ms}ms")
 
+            self._extraer_datos_de_resultado(tool_name, result)
             return result
 
         except Exception as e:
+            ms = int((time.monotonic() - t0) * 1000)
             self.session_data["intentos_fallidos"] += 1
             error_msg = json.dumps({"error": f"Error en {tool_name}: {str(e)}"})
+            log.error(f"[ORCH] sid={sid} | ← {tool_name} | EXCEPTION={e} | {ms}ms", exc_info=True)
             if self.session_data["intentos_fallidos"] >= 3:
                 self.session_data["fase"] = "ESCALAR"
             return error_msg
@@ -233,11 +247,19 @@ class Orchestrator:
             return respuesta_escalar
 
         # 3. Loop del orquestador con tool_use
+        sid = self.session_data["session_id"]
+        log.info(f"[ORCH] sid={sid} | MENSAJE | fase={self.session_data['fase']} | msg={mensaje_usuario[:120]}")
         messages = list(self.historial)
+        rounds = 0
 
         while True:
+            rounds += 1
+            if rounds > MAX_TOOL_ROUNDS:
+                log.error(f"[ORCH] sid={sid} | MAX_TOOL_ROUNDS={MAX_TOOL_ROUNDS} excedido")
+                return "Error: demasiadas iteraciones internas. Por favor contacte soporte."
+
             response = client.messages.create(
-                model="claude-sonnet-4-6-20250514",
+                model="claude-sonnet-4-6",
                 max_tokens=1024,
                 system=self._build_system_prompt(),
                 tools=TOOLS_ORQUESTADOR,
@@ -252,6 +274,7 @@ class Orchestrator:
                 )
                 self.historial.append({"role": "assistant", "content": respuesta_final})
                 self._detectar_fase_por_contenido(respuesta_final)
+                log.info(f"[ORCH] sid={sid} | RESPUESTA | fase={self.session_data['fase']} | {respuesta_final[:150]}")
                 return respuesta_final
 
             # Procesar tool_use
