@@ -8,17 +8,9 @@ APIPERU_TOKEN = os.getenv("APIPERU_TOKEN")
 
 
 def validar_dni(dni: str) -> dict:
-    """
-    Valida un DNI peruano contra la API de RENIEC.
-    GET https://api.apis.net.pe/v2/reniec/dni?numero={dni}
-    Header: Authorization: Bearer {APIPERU_TOKEN}
-    Si responde 200: retorna {"valido": True, "nombres": ..., "apellidos": ...}
-    Si falla: retorna {"valido": False, "error": "DNI no encontrado"}
-    """
-    url = f"https://api.apis.net.pe/v2/reniec/dni?numero={dni}"
-    headers = {
-        "Authorization": f"Bearer {APIPERU_TOKEN}"
-    }
+    # ✅ URL correcta
+    url = f"https://api.decolecta.com/v1/reniec/dni?numero={dni}"
+    headers = {"Authorization": f"Bearer {APIPERU_TOKEN}"}
 
     try:
         response = requests.get(url, headers=headers, timeout=10)
@@ -27,16 +19,42 @@ def validar_dni(dni: str) -> dict:
             data = response.json()
             return {
                 "valido": True,
-                "nombres": data.get("nombres", ""),
-                "apellidos": f"{data.get('apellidoPaterno', '')} {data.get('apellidoMaterno', '')}".strip()
+                "fuente": "reniec",
+                "nombres":   data.get("first_name", ""),
+                "apellidos": (
+                    f"{data.get('first_last_name', '')} "
+                    f"{data.get('second_last_name', '')}"
+                ).strip()
             }
-        else:
-            return {
-                "valido": False,
-                "error": "DNI no encontrado"
-            }
+
+        print(f"[RENIEC] DNI {dni} → HTTP {response.status_code} | {response.text[:200]}")
+
     except requests.RequestException as e:
-        return {
-            "valido": False,
-            "error": f"Error de conexión: {str(e)}"
-        }
+        print(f"[RENIEC] DNI {dni} → Error de conexión: {e}")
+
+    return _validar_dni_supabase(dni)
+
+def _validar_dni_supabase(dni: str) -> dict:
+    """
+    Fallback: busca el DNI en la tabla alumnos de Supabase.
+    Útil cuando RENIEC no está disponible o el token expiró.
+    """
+    try:
+        from tools.supabase_client import obtener_alumno_por_dni
+        alumno = obtener_alumno_por_dni(dni)
+
+        if alumno:
+            print(f"[RENIEC] DNI {dni} → encontrado en Supabase (fallback)")
+            return {
+                "valido": True,
+                "fuente": "supabase",
+                "nombres":   alumno.get("nombres", ""),
+                "apellidos": alumno.get("apellidos", "")
+            }
+    except Exception as e:
+        print(f"[RENIEC] Fallback Supabase falló para DNI {dni}: {e}")
+
+    return {
+        "valido": False,
+        "error": "DNI no encontrado en RENIEC ni en base de datos"
+    }
