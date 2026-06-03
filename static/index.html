@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academia Tesla - Sistema Inteligente de Matrículas</title>
-    <meta name="description" content="Sistema multiagente de matrículas automatizadas para Academia Tesla">
+    <title>Academia Tesla - CRM Multiagente</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,11 +46,9 @@
             align-items: center;
             gap: 16px;
             flex-shrink: 0;
+            height: 64px;
         }
-        .logo {
-            font-size: 28px;
-            line-height: 1;
-        }
+        .logo { font-size: 28px; line-height: 1; }
         .header-text h1 {
             font-size: 18px;
             font-weight: 700;
@@ -59,14 +56,15 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-        .header-text p {
-            font-size: 11px;
-            color: var(--text-secondary);
-            font-weight: 400;
-            margin-top: 2px;
-        }
+        .header-text p { font-size: 11px; color: var(--text-secondary); font-weight: 400; margin-top: 2px; }
+        
         .header-badge {
             margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ws-status {
             font-size: 10px;
             color: var(--green);
             background: rgba(52,211,153,0.1);
@@ -74,6 +72,11 @@
             padding: 4px 12px;
             border-radius: 20px;
             font-weight: 500;
+        }
+        .ws-status.offline {
+            color: var(--red);
+            background: rgba(248,113,113,0.1);
+            border-color: rgba(248,113,113,0.2);
         }
 
         /* === MAIN LAYOUT === */
@@ -83,11 +86,310 @@
             overflow: hidden;
         }
 
-        /* === SIDEBAR === */
-        .sidebar {
-            width: 280px;
+        /* === COL 1: CONVERSATIONS LIST === */
+        .conv-list-panel {
+            width: 320px;
             background: var(--bg-secondary);
             border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+        .panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .conv-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 4px;
+        }
+        .conv-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .conv-item:hover {
+            background: var(--bg-card);
+        }
+        .conv-item.active {
+            background: var(--bg-card);
+            border-color: var(--border);
+            box-shadow: inset 4px 0 0 var(--blue);
+        }
+        .conv-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .conv-phone {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .conv-bot-badge {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(52,211,153,0.1);
+            color: var(--green);
+            border: 1px solid rgba(52,211,153,0.2);
+        }
+        .conv-bot-badge.off {
+            background: rgba(248,113,113,0.1);
+            color: var(--red);
+            border-color: rgba(248,113,113,0.2);
+        }
+        .conv-last-msg {
+            font-size: 12px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* === COL 2: CHAT PANEL === */
+        .chat-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: var(--bg-primary);
+        }
+        .chat-header {
+            height: 60px;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-secondary);
+        }
+        .chat-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Toggle Switch */
+        .agent-toggle {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--bg-input);
+            transition: .4s;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 3px; bottom: 3px;
+            background-color: var(--text-muted);
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: rgba(52,211,153,0.2);
+            border-color: var(--green);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+            background-color: var(--green);
+        }
+
+        /* Messages */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+        .chat-messages::-webkit-scrollbar { width: 6px; }
+        .chat-messages::-webkit-scrollbar-track { background: transparent; }
+        .chat-messages::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 3px; }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            max-width: 75%;
+            animation: msg-in 0.3s ease-out;
+        }
+        @keyframes msg-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.bot { align-self: flex-start; }
+        .message.human { align-self: flex-start; }
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        .message.bot .avatar { background: linear-gradient(135deg, #2a2a5a, #1e1e3a); border: 1px solid var(--border); }
+        .message.human .avatar { background: linear-gradient(135deg, var(--orange), #d97706); }
+        .message.user .avatar { background: linear-gradient(135deg, var(--blue), #3a6fd8); }
+
+        .bubble {
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-wrap: break-word;
+        }
+        .message.bot .bubble {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-top-left-radius: 4px;
+            color: var(--text-primary);
+        }
+        .message.human .bubble {
+            background: rgba(251, 146, 60, 0.1);
+            border: 1px solid rgba(251, 146, 60, 0.3);
+            border-top-left-radius: 4px;
+            color: var(--text-primary);
+        }
+        .message.user .bubble {
+            background: linear-gradient(135deg, var(--blue), #3a6fd8);
+            color: #fff;
+            border-top-right-radius: 4px;
+        }
+        .msg-role {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+            display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            gap: 12px;
+            max-width: 75%;
+            margin-bottom: 16px;
+            margin-left: 32px;
+        }
+        .typing-indicator.visible { display: flex; }
+        .typing-dots {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            border-top-left-radius: 4px;
+            padding: 14px 22px;
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        .typing-dots span {
+            width: 7px;
+            height: 7px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Input Bar */
+        .input-bar {
+            padding: 16px 32px 24px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 4px;
+            transition: border-color 0.2s;
+        }
+        .input-wrapper:focus-within {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-glow);
+        }
+        #msg-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            padding: 12px 16px;
+        }
+        .btn-send {
+            background: linear-gradient(135deg, var(--blue), #3a6fd8);
+            border: none;
+            color: #fff;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.15s;
+            flex-shrink: 0;
+        }
+        .btn-send:hover { transform: scale(1.05); }
+        .btn-send:active { transform: scale(0.95); }
+
+        /* === COL 3: SIDEBAR INFO === */
+        .info-panel {
+            width: 300px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             padding: 20px;
@@ -131,10 +433,8 @@
             display: inline-block;
             animation: pulse-dot 2s ease-in-out infinite;
         }
-        @keyframes pulse-dot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
+        @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        
         .phase-CAPTACION .phase-dot { background: var(--blue); box-shadow: 0 0 8px var(--blue-glow); }
         .phase-CAPTACION .phase-value { color: var(--blue); }
         .phase-REGISTRO .phase-dot { background: var(--orange); box-shadow: 0 0 8px rgba(251,146,60,0.3); }
@@ -145,35 +445,20 @@
         .phase-ESCALAR .phase-value { color: var(--red); }
         .phase-COMPLETADO .phase-dot { background: var(--gold); box-shadow: 0 0 8px var(--gold-dim); }
         .phase-COMPLETADO .phase-value { color: var(--gold); }
+        .phase-NONE .phase-dot { background: var(--text-muted); }
+        .phase-NONE .phase-value { color: var(--text-muted); }
 
         /* Pipeline */
-        .pipeline {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
+        .pipeline { display: flex; flex-direction: column; gap: 4px; }
         .pipeline-step {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 12px;
-            color: var(--text-muted);
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; border-radius: 8px;
+            font-size: 12px; color: var(--text-muted);
             transition: all 0.3s ease;
         }
-        .pipeline-step.active {
-            background: rgba(79,142,247,0.08);
-            color: var(--text-primary);
-        }
-        .pipeline-step.done {
-            color: var(--green);
-        }
-        .pipeline-icon {
-            font-size: 14px;
-            width: 20px;
-            text-align: center;
-        }
+        .pipeline-step.active { background: rgba(79,142,247,0.08); color: var(--text-primary); }
+        .pipeline-step.done { color: var(--green); }
+        .pipeline-icon { font-size: 14px; width: 20px; text-align: center; }
 
         /* Session Data */
         .session-data {
@@ -185,218 +470,25 @@
             flex-direction: column;
             gap: 10px;
         }
-        .data-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 12px;
-        }
-        .data-label {
-            color: var(--text-muted);
-        }
+        .data-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; }
+        .data-label { color: var(--text-muted); }
         .data-value {
-            color: var(--text-primary);
-            font-weight: 500;
-            font-family: 'Inter', monospace;
-            font-size: 11px;
-            max-width: 140px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            text-align: right;
+            color: var(--text-primary); font-weight: 500; font-family: 'Inter', monospace; font-size: 11px;
+            max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right;
         }
-        .data-value.empty {
-            color: var(--text-muted);
-            font-style: italic;
-        }
+        .data-value.empty { color: var(--text-muted); font-style: italic; }
 
-        /* New Session Button */
-        .btn-new-session {
-            margin-top: auto;
-            background: transparent;
-            border: 1px solid rgba(248,113,113,0.3);
-            color: var(--red);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-family: 'Inter', sans-serif;
-        }
-        .btn-new-session:hover {
-            background: rgba(248,113,113,0.1);
-            border-color: var(--red);
-        }
-
-        /* === CHAT PANEL === */
-        .chat-panel {
+        .empty-state {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-        }
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 24px 32px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            scroll-behavior: smooth;
-        }
-        .chat-messages::-webkit-scrollbar {
-            width: 6px;
-        }
-        .chat-messages::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: var(--text-muted);
-            border-radius: 3px;
-        }
-
-        /* Message Bubbles */
-        .message {
-            display: flex;
-            gap: 12px;
-            max-width: 75%;
-            animation: msg-in 0.3s ease-out;
-        }
-        @keyframes msg-in {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .message.bot { align-self: flex-start; }
-        .message.user { align-self: flex-end; flex-direction: row-reverse; }
-
-        .avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-        .message.bot .avatar {
-            background: linear-gradient(135deg, #2a2a5a, #1e1e3a);
-            border: 1px solid var(--border);
-        }
-        .message.user .avatar {
-            background: linear-gradient(135deg, var(--blue), #3a6fd8);
-        }
-
-        .bubble {
-            padding: 14px 18px;
-            border-radius: 16px;
-            font-size: 14px;
-            line-height: 1.6;
-            word-wrap: break-word;
-        }
-        .message.bot .bubble {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-bottom-left-radius: 4px;
-            color: var(--text-primary);
-        }
-        .message.user .bubble {
-            background: linear-gradient(135deg, var(--blue), #3a6fd8);
-            color: #fff;
-            border-bottom-right-radius: 4px;
-        }
-
-        /* Typing Indicator */
-        .typing-indicator {
-            display: none;
-            align-self: flex-start;
-            gap: 12px;
-            max-width: 75%;
-        }
-        .typing-indicator.visible { display: flex; }
-        .typing-dots {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            border-bottom-left-radius: 4px;
-            padding: 14px 22px;
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .typing-dots span {
-            width: 7px;
-            height: 7px;
-            background: var(--text-muted);
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out;
-        }
-        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes bounce {
-            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-            40% { transform: scale(1); opacity: 1; }
-        }
-
-        /* === INPUT BAR === */
-        .input-bar {
-            padding: 16px 32px 24px;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-            flex-shrink: 0;
-        }
-        .input-wrapper {
-            display: flex;
-            align-items: center;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 4px;
-            transition: border-color 0.2s;
-        }
-        .input-wrapper:focus-within {
-            border-color: var(--blue);
-            box-shadow: 0 0 0 3px var(--blue-glow);
-        }
-        #msg-input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            outline: none;
-            color: var(--text-primary);
-            font-family: 'Inter', sans-serif;
-            font-size: 14px;
-            padding: 12px 16px;
-        }
-        #msg-input::placeholder {
             color: var(--text-muted);
+            font-size: 14px;
+            text-align: center;
+            padding: 20px;
         }
-        .btn-send {
-            background: linear-gradient(135deg, var(--blue), #3a6fd8);
-            border: none;
-            color: #fff;
-            width: 42px;
-            height: 42px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.15s, opacity 0.2s;
-            flex-shrink: 0;
-        }
-        .btn-send:hover { transform: scale(1.05); }
-        .btn-send:active { transform: scale(0.95); }
-        .btn-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .sidebar { display: none; }
-            .chat-messages { padding: 16px; }
-            .input-bar { padding: 12px 16px 16px; }
-        }
     </style>
 </head>
 <body>
@@ -405,225 +497,330 @@
     <div class="logo">🎓</div>
     <div class="header-text">
         <h1>Academia Tesla</h1>
-        <p>Sistema Inteligente de Matrículas</p>
+        <p>CRM Inteligente de Matrículas</p>
     </div>
-    <div class="header-badge">● En línea</div>
+    <div class="header-badge">
+        <div id="ws-status" class="ws-status offline">● WS Conectando...</div>
+    </div>
 </header>
 
 <div class="main-container">
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <div class="sidebar-title">Estado de Sesión</div>
+    
+    <!-- COL 1: CONVERSATIONS -->
+    <aside class="conv-list-panel">
+        <div class="panel-header">
+            <span>Conversaciones Activas</span>
+            <button onclick="fetchConversations()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;">🔄</button>
+        </div>
+        <div class="conv-list" id="conv-list">
+            <!-- Conversaciones -->
+            <div class="empty-state">Cargando conversaciones...</div>
+        </div>
+    </aside>
 
-        <div class="phase-indicator phase-CAPTACION" id="phase-box">
+    <!-- COL 2: CHAT PANEL -->
+    <main class="chat-panel">
+        <div class="chat-header">
+            <div class="chat-title" id="chat-title">Selecciona una conversación</div>
+            <div class="agent-toggle" id="agent-toggle-container" style="display:none;">
+                <span>Agente IA:</span>
+                <label class="switch">
+                    <input type="checkbox" id="agent-toggle" onchange="toggleAgent()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="chat-messages" id="chat-messages">
+            <div class="empty-state" id="chat-empty-state">No hay una conversación seleccionada</div>
+        </div>
+
+        <div class="typing-indicator" id="typing">
+            <div class="avatar" style="background:linear-gradient(135deg,#2a2a5a,#1e1e3a);border:1px solid rgba(255,255,255,0.06)">🤖</div>
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+        </div>
+
+        <div class="input-bar" id="input-bar" style="display:none;">
+            <div class="input-wrapper">
+                <input type="text" id="msg-input" placeholder="Escribe para enviar manualmente (empieza con /sim para simular usuario)..." autocomplete="off">
+                <button class="btn-send" id="btn-send" onclick="enviarMensaje()">➤</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- COL 3: SIDEBAR INFO -->
+    <aside class="info-panel" id="info-panel" style="opacity: 0.5; pointer-events: none;">
+        <div class="sidebar-title">Estado del Prospecto</div>
+
+        <div class="phase-indicator phase-NONE" id="phase-box">
             <div class="phase-label">Fase Actual</div>
             <div class="phase-value">
                 <span class="phase-dot"></span>
-                <span id="phase-text">CAPTACIÓN</span>
+                <span id="phase-text">—</span>
             </div>
         </div>
 
         <div class="sidebar-title">Pipeline</div>
         <div class="pipeline">
-            <div class="pipeline-step active" id="pip-captacion">
-                <span class="pipeline-icon">📚</span> Captación
-            </div>
-            <div class="pipeline-step" id="pip-registro">
-                <span class="pipeline-icon">📝</span> Registro
-            </div>
-            <div class="pipeline-step" id="pip-cierre">
-                <span class="pipeline-icon">💳</span> Cierre
-            </div>
-            <div class="pipeline-step" id="pip-completado">
-                <span class="pipeline-icon">✅</span> Completado
-            </div>
+            <div class="pipeline-step" id="pip-captacion"><span class="pipeline-icon">📚</span> Captación</div>
+            <div class="pipeline-step" id="pip-registro"><span class="pipeline-icon">📝</span> Registro</div>
+            <div class="pipeline-step" id="pip-cierre"><span class="pipeline-icon">💳</span> Cierre</div>
+            <div class="pipeline-step" id="pip-completado"><span class="pipeline-icon">✅</span> Completado</div>
         </div>
 
-        <div class="sidebar-title">Datos Acumulados</div>
+        <div class="sidebar-title">Datos Extraídos</div>
         <div class="session-data">
-            <div class="data-row">
-                <span class="data-label">DNI Alumno</span>
-                <span class="data-value empty" id="sd-dni">—</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">Ciclo</span>
-                <span class="data-value empty" id="sd-ciclo">—</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">Alumno ID</span>
-                <span class="data-value empty" id="sd-alumno">—</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">Charge ID</span>
-                <span class="data-value empty" id="sd-charge">—</span>
-            </div>
-            <div class="data-row">
-                <span class="data-label">Fallos</span>
-                <span class="data-value" id="sd-fallos">0</span>
-            </div>
+            <div class="data-row"><span class="data-label">DNI Alumno</span><span class="data-value empty" id="sd-dni">—</span></div>
+            <div class="data-row"><span class="data-label">Ciclo</span><span class="data-value empty" id="sd-ciclo">—</span></div>
+            <div class="data-row"><span class="data-label">Alumno ID</span><span class="data-value empty" id="sd-alumno">—</span></div>
+            <div class="data-row"><span class="data-label">Charge ID</span><span class="data-value empty" id="sd-charge">—</span></div>
+            <div class="data-row"><span class="data-label">Fallos</span><span class="data-value" id="sd-fallos">0</span></div>
         </div>
-
-        <button class="btn-new-session" onclick="nuevaSesion()">🔄 Nueva Sesión</button>
     </aside>
 
-    <!-- CHAT -->
-    <main class="chat-panel">
-        <div class="chat-messages" id="chat-messages">
-            <!-- messages rendered here -->
-        </div>
-        <div class="typing-indicator" id="typing">
-            <div class="avatar" style="background:linear-gradient(135deg,#2a2a5a,#1e1e3a);border:1px solid rgba(255,255,255,0.06)">🤖</div>
-            <div class="typing-dots"><span></span><span></span><span></span></div>
-        </div>
-        <div class="input-bar">
-            <div class="input-wrapper">
-                <input type="text" id="msg-input" placeholder="Escribe tu mensaje..." autocomplete="off">
-                <button class="btn-send" id="btn-send" onclick="enviarMensaje()">➤</button>
-            </div>
-        </div>
-    </main>
 </div>
 
 <script>
-let sessionId = null;
-let sending = false;
+    let currentPhone = null;
+    let ws = null;
 
-const chatBox = document.getElementById('chat-messages');
-const input = document.getElementById('msg-input');
-const btnSend = document.getElementById('btn-send');
-const typing = document.getElementById('typing');
+    // Elementos DOM
+    const convListEl = document.getElementById('conv-list');
+    const chatTitle = document.getElementById('chat-title');
+    const agentToggleCont = document.getElementById('agent-toggle-container');
+    const agentToggle = document.getElementById('agent-toggle');
+    const chatBox = document.getElementById('chat-messages');
+    const inputBar = document.getElementById('input-bar');
+    const msgInput = document.getElementById('msg-input');
+    const infoPanel = document.getElementById('info-panel');
+    const typing = document.getElementById('typing');
+    const chatEmpty = document.getElementById('chat-empty-state');
+    const wsStatus = document.getElementById('ws-status');
 
-// -- Render messages --
-function addMessage(text, role) {
-    const div = document.createElement('div');
-    div.className = 'message ' + role;
-    const avatar = role === 'bot' ? '🤖' : '👤';
-    // Convert markdown bold, line breaks
-    let html = text
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n/g, '<br>');
-    div.innerHTML = `
-        <div class="avatar">${avatar}</div>
-        <div class="bubble">${html}</div>
-    `;
-    chatBox.appendChild(div);
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
+    // === WebSocket Initialization ===
+    function initWebSocket() {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//${window.location.host}/ws`);
+        
+        ws.onopen = () => {
+            wsStatus.className = 'ws-status';
+            wsStatus.innerHTML = '● WS Conectado';
+        };
+        
+        ws.onclose = () => {
+            wsStatus.className = 'ws-status offline';
+            wsStatus.innerHTML = '● WS Desconectado';
+            setTimeout(initWebSocket, 3000); // Reconnect
+        };
 
-// -- Update sidebar --
-function updateSidebar(data) {
-    if (!data) return;
-    const fase = data.fase || 'CAPTACION';
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'new_message') {
+                fetchConversations(); // Update left list
+                if (data.phone === currentPhone) {
+                    loadConversation(currentPhone); // Refresh chat and sidebar
+                }
+            } else if (data.type === 'agent_typing') {
+                if (data.phone === currentPhone) {
+                    typing.classList.add('visible');
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            } else if (data.type === 'agent_toggled') {
+                fetchConversations();
+                if (data.phone === currentPhone) {
+                    agentToggle.checked = data.enabled;
+                }
+            }
+        };
+    }
 
-    // Phase box
-    const box = document.getElementById('phase-box');
-    box.className = 'phase-indicator phase-' + fase;
-    document.getElementById('phase-text').textContent = fase;
+    // === Fetch Conversations ===
+    async function fetchConversations() {
+        try {
+            const res = await fetch('/api/conversations');
+            const data = await res.json();
+            renderConversations(data);
+        } catch (e) {
+            console.error("Error fetching convs", e);
+        }
+    }
 
-    // Pipeline steps
-    const order = ['CAPTACION','REGISTRO','CIERRE','COMPLETADO'];
-    const idx = order.indexOf(fase);
-    const pips = ['pip-captacion','pip-registro','pip-cierre','pip-completado'];
-    pips.forEach((id, i) => {
-        const el = document.getElementById(id);
-        el.className = 'pipeline-step';
-        if (i < idx) el.classList.add('done');
-        if (i === idx || (fase === 'ESCALAR')) el.classList.add('active');
+    function renderConversations(convs) {
+        if (convs.length === 0) {
+            convListEl.innerHTML = '<div class="empty-state">No hay conversaciones activas</div>';
+            return;
+        }
+        convListEl.innerHTML = '';
+        convs.forEach(c => {
+            const div = document.createElement('div');
+            div.className = `conv-item ${c.phone === currentPhone ? 'active' : ''}`;
+            div.onclick = () => selectConversation(c.phone);
+            
+            const badgeClass = c.agent_enabled ? 'conv-bot-badge' : 'conv-bot-badge off';
+            const badgeText = c.agent_enabled ? 'Bot ON' : 'Bot OFF';
+
+            div.innerHTML = `
+                <div class="conv-top">
+                    <span class="conv-phone">${c.phone}</span>
+                    <span class="${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="conv-last-msg">${c.last_message || 'Sin mensajes'}</div>
+            `;
+            convListEl.appendChild(div);
+        });
+    }
+
+    // === Select Conversation ===
+    function selectConversation(phone) {
+        currentPhone = phone;
+        chatTitle.textContent = phone;
+        agentToggleCont.style.display = 'flex';
+        inputBar.style.display = 'block';
+        infoPanel.style.opacity = '1';
+        infoPanel.style.pointerEvents = 'auto';
+        chatEmpty.style.display = 'none';
+        
+        fetchConversations(); // Re-render to highlight active
+        loadConversation(phone);
+    }
+
+    // === Load Conversation Details ===
+    async function loadConversation(phone) {
+        try {
+            const res = await fetch(`/api/conversations/${phone}`);
+            const data = await res.json();
+            
+            agentToggle.checked = data.agent_enabled;
+            renderMessages(data.messages);
+            updateSidebar(data.session_data);
+            typing.classList.remove('visible');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    // === Render Messages ===
+    function renderMessages(messages) {
+        chatBox.innerHTML = '';
+        if (messages.length === 0) {
+            chatBox.innerHTML = '<div class="empty-state">No hay mensajes aún.</div>';
+            return;
+        }
+
+        messages.forEach(m => {
+            const div = document.createElement('div');
+            div.className = `message ${m.role}`;
+            
+            let avatar = '👤';
+            let roleName = 'Usuario';
+            if (m.role === 'bot') { avatar = '🤖'; roleName = 'IA'; }
+            if (m.role === 'human') { avatar = '🧑‍💻'; roleName = 'Asesor'; }
+
+            // Parse markdown
+            let html = m.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
+            div.innerHTML = `
+                <div class="avatar">${avatar}</div>
+                <div>
+                    <span class="msg-role">${roleName}</span>
+                    <div class="bubble">${html}</div>
+                </div>
+            `;
+            chatBox.appendChild(div);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    // === Toggle Agent ===
+    async function toggleAgent() {
+        if (!currentPhone) return;
+        const enabled = agentToggle.checked;
+        await fetch(`/api/conversations/${currentPhone}/toggle`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ enabled })
+        });
+    }
+
+    // === Send Manual or Simulated Message ===
+    async function enviarMensaje() {
+        if (!currentPhone) return;
+        const txt = msgInput.value.trim();
+        if (!txt) return;
+
+        msgInput.value = '';
+        msgInput.disabled = true;
+
+        let url = `/api/conversations/${currentPhone}/send`; // Manual send (Asesor)
+        let payload = { mensaje: txt };
+
+        // Helper for local testing: if starts with /sim, act as user
+        if (txt.startsWith('/sim ')) {
+            url = `/api/conversations/${currentPhone}/simulate_user`;
+            payload = { mensaje: txt.substring(5) };
+        }
+
+        try {
+            await fetch(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+            });
+        } catch (e) {
+            console.error(e);
+        } finally {
+            msgInput.disabled = false;
+            msgInput.focus();
+        }
+    }
+
+    msgInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje(); }
     });
 
-    // Session data
-    const sd = data.session_data || data;
-    setDataValue('sd-dni', sd.dni_alumno);
-    setDataValue('sd-ciclo', sd.ciclo_codigo);
-    setDataValue('sd-alumno', sd.alumno_id);
-    setDataValue('sd-charge', sd.charge_id);
-    document.getElementById('sd-fallos').textContent = sd.intentos_fallidos || 0;
-}
+    // === Update Sidebar ===
+    function updateSidebar(data) {
+        if (!data) return;
+        const fase = data.fase || 'NONE';
 
-function setDataValue(id, val) {
-    const el = document.getElementById(id);
-    if (val) {
-        el.textContent = val;
-        el.classList.remove('empty');
-    } else {
-        el.textContent = '—';
-        el.classList.add('empty');
-    }
-}
+        // Phase box
+        const box = document.getElementById('phase-box');
+        box.className = 'phase-indicator phase-' + fase;
+        document.getElementById('phase-text').textContent = fase;
 
-// -- Send message --
-async function enviarMensaje() {
-    const msg = input.value.trim();
-    if (!msg || sending) return;
-
-    sending = true;
-    btnSend.disabled = true;
-    input.value = '';
-    addMessage(msg, 'user');
-    typing.classList.add('visible');
-
-    try {
-        const res = await fetch('/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_id: sessionId, mensaje: msg })
+        // Pipeline steps
+        const order = ['CAPTACION','REGISTRO','CIERRE','COMPLETADO'];
+        const idx = order.indexOf(fase);
+        const pips = ['pip-captacion','pip-registro','pip-cierre','pip-completado'];
+        pips.forEach((id, i) => {
+            const el = document.getElementById(id);
+            el.className = 'pipeline-step';
+            if (i < idx) el.classList.add('done');
+            if (i === idx || (fase === 'ESCALAR')) el.classList.add('active');
         });
-        if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.detail || 'Error del servidor');
+
+        // Session data
+        setDataValue('sd-dni', data.dni_alumno);
+        setDataValue('sd-ciclo', data.ciclo_codigo);
+        setDataValue('sd-alumno', data.alumno_id);
+        setDataValue('sd-charge', data.charge_id);
+        document.getElementById('sd-fallos').textContent = data.intentos_fallidos || 0;
+    }
+
+    function setDataValue(id, val) {
+        const el = document.getElementById(id);
+        if (val) {
+            el.textContent = val;
+            el.classList.remove('empty');
+        } else {
+            el.textContent = '—';
+            el.classList.add('empty');
         }
-        const data = await res.json();
-        sessionId = data.session_id;
-        addMessage(data.respuesta, 'bot');
-        updateSidebar(data);
-    } catch (e) {
-        addMessage('⚠️ Error de conexión: ' + e.message, 'bot');
-    } finally {
-        typing.classList.remove('visible');
-        sending = false;
-        btnSend.disabled = false;
-        input.focus();
     }
-}
 
-// -- New session --
-async function nuevaSesion() {
-    if (sessionId) {
-        try { await fetch('/sesion/' + sessionId, { method: 'DELETE' }); } catch(e) {}
-    }
-    sessionId = null;
-    chatBox.innerHTML = '';
-    updateSidebar({ fase:'CAPTACION', session_data:{ dni_alumno:null, ciclo_codigo:null, alumno_id:null, charge_id:null, intentos_fallidos:0 }});
-    iniciar();
-}
-
-// -- Enter key --
-input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviarMensaje(); }
-});
-
-// -- Auto-start --
-async function iniciar() {
-    typing.classList.add('visible');
-    try {
-        const res = await fetch('/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ session_id: null, mensaje: 'Hola' })
-        });
-        const data = await res.json();
-        sessionId = data.session_id;
-        addMessage(data.respuesta, 'bot');
-        updateSidebar(data);
-    } catch (e) {
-        addMessage('⚠️ No se pudo conectar con el servidor.', 'bot');
-    } finally {
-        typing.classList.remove('visible');
-        input.focus();
-    }
-}
-
-iniciar();
+    // Initialize
+    initWebSocket();
+    fetchConversations();
 </script>
 </body>
 </html>

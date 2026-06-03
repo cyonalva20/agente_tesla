@@ -1,75 +1,247 @@
-from fastapi import FastAPI, HTTPException
+import uuid
+import json
+import asyncio
+from typing import Dict, List, Any
+from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-import uuid
+import os
 
 from orchestrator import Orchestrator
+from tools.evolution_whatsapp import enviar_mensaje
 
-app = FastAPI(title="Academia Tesla - Sistema Multiagente")
+app = FastAPI(title="Academia Tesla - Sistema Multiagente CRM")
 
-# Almacena sesiones activas en memoria
-sesiones: dict = {}
+# Estado en memoria (CRM)
+# formato: { phone: { "session_id": str, "agent_enabled": bool, "orchestrator": Orchestrator, "messages": list, "last_updated": float } }
+sesiones: Dict[str, dict] = {}
 
+# Gestor de WebSockets para notificar al frontend
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
 
-class MensajeRequest(BaseModel):
-    session_id: str | None = None
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections:
+            try:
+                await connection.send_json(message)
+            except:
+                pass
+
+ws_manager = ConnectionManager()
+
+class ToggleRequest(BaseModel):
+    enabled: bool
+
+class SendMessageRequest(BaseModel):
     mensaje: str
-
-
-class MensajeResponse(BaseModel):
-    session_id: str
-    respuesta: str
-    fase: str
-    session_data: dict
-
 
 @app.get("/")
 async def root():
     return FileResponse("static/index.html")
 
-
-@app.post("/chat", response_model=MensajeResponse)
-async def chat(request: MensajeRequest):
-    if request.session_id and request.session_id in sesiones:
-        session_id = request.session_id
-        orchestrator = sesiones[session_id]
-    else:
-        orchestrator = Orchestrator()
-        session_id = orchestrator.session_data["session_id"]
-        sesiones[session_id] = orchestrator
-
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await ws_manager.connect(websocket)
     try:
-        respuesta = await orchestrator.procesar_mensaje(request.mensaje)
-        return MensajeResponse(
-            session_id=session_id,
-            respuesta=respuesta,
-            fase=orchestrator.session_data["fase"],
-            session_data=orchestrator.session_data
-        )
+        while True:
+            await websocket.receive_text() # keep-alive
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+
+def _get_or_create_session(phone: str):
+    if phone not in sesiones:
+        orch = Orchestrator()
+        sesiones[phone] = {
+            "session_id": orch.session_data["session_id"],
+            "agent_enabled": True,
+            "orchestrator": orch,
+            "messages": [],
+            "last_updated": asyncio.get_event_loop().time()
+        }
+    return sesiones[phone]
+
+# --- WEBHOOK EVOLUTION API ---
+@app.post("/webhook/evolution")
+async def evolution_webhook(request: Request, background_tasks: BackgroundTasks):
+    data = await request.json()
+    
+    # Dependiendo de la version, la estructura varia. Asumimos estructura standard:
+    event = data.get("event", "")
+    if event != "messages.upsert":
+        return {"status": "ignored"}
+        
+    msg_data = data.get("data", {})
+    key = msg_data.get("key", {})
+    from_me = key.get("fromMe", False)
+    remote_jid = key.get("remoteJid", "")
+    
+    # Ignorar mensajes de grupos o estados
+    if not remote_jid or "@g.us" in remote_jid or "status" in remote_jid:
+        return {"status": "ignored"}
+
+    def _resolver_numero(key: dict, remote_jid: str) -> str:
+        # Si es LID, el número real está en senderPn (o remoteJidAlt en otras versiones)
+        if "@lid" in remote_jid:
+            alt = key.get("senderPn") or key.get("remoteJidAlt")
+            if alt and "@lid" not in alt:
+                return alt.split("@")[0]
+            return ""  # no hay número válido, no intentamos responder
+            
+        return remote_jid.split("@")[0]
+        
+    phone = _resolver_numero(key, remote_jid)
+    if not phone:
+        print(f"[WARN] No se pudo resolver número real para {remote_jid}")
+        return {"status": "no_phone"}
+    
+    # Extraer texto del mensaje
+    message_content = msg_data.get("message", {})
+    text = ""
+    if "conversation" in message_content:
+        text = message_content["conversation"]
+    elif "extendedTextMessage" in message_content:
+        text = message_content["extendedTextMessage"].get("text", "")
+        
+    if not text:
+        return {"status": "no_text"}
+
+    session_info = _get_or_create_session(phone)
+    session_info["last_updated"] = asyncio.get_event_loop().time()
+    
+    # Si el mensaje fue enviado por el bot/humano (from_me), no lo duplicamos si ya lo enviamos nosotros
+    # Evolution lo enviara devuelta, pero es mejor ignorar los fromMe para evitar doble eco, 
+    # a menos que sea enviado desde otro dispositivo celular. 
+    # Por ahora lo guardamos si viene de afuera.
+    if from_me:
+        # Lo guardamos como 'bot' (o human). 
+        # NOTA: Puede generar duplicados si ya lo agregamos al hacer el POST a la API.
+        pass
+    else:
+        # Mensaje de usuario
+        msg_obj = {"role": "user", "text": text}
+        session_info["messages"].append(msg_obj)
+        await ws_manager.broadcast({"type": "new_message", "phone": phone})
+
+        # Procesar con Agente si esta activo
+        if session_info["agent_enabled"]:
+            background_tasks.add_task(procesar_agente, phone, text)
+        
+    return {"status": "ok"}
+
+async def procesar_agente(phone: str, mensaje: str):
+    session_info = sesiones.get(phone)
+    if not session_info: return
+    
+    orch = session_info["orchestrator"]
+    try:
+        await ws_manager.broadcast({"type": "agent_typing", "phone": phone})
+        
+        respuesta = await orch.procesar_mensaje(mensaje)
+        
+        # Guardar en CRM primero para que se vea rapido
+        session_info["messages"].append({"role": "bot", "text": respuesta})
+        session_info["last_updated"] = asyncio.get_event_loop().time()
+        
+        await ws_manager.broadcast({"type": "new_message", "phone": phone})
+        
+        # Enviar por whatsapp
+        resultado = enviar_mensaje(f"{phone}@s.whatsapp.net", respuesta)
+        if not resultado.get("enviado"):
+            print(f"[ERROR] Envío WhatsApp falló para {phone}: {resultado.get('error')}")
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+        print(f"Error procesando agente para {phone}: {e}")
 
+# --- API CRM ---
+@app.get("/api/conversations")
+async def get_conversations():
+    convs = []
+    for phone, info in sesiones.items():
+        last_msg = info["messages"][-1]["text"] if info["messages"] else "Sin mensajes"
+        convs.append({
+            "phone": phone,
+            "last_message": last_msg,
+            "agent_enabled": info["agent_enabled"],
+            "fase": info["orchestrator"].session_data["fase"],
+            "last_updated": info["last_updated"]
+        })
+    convs.sort(key=lambda x: x["last_updated"], reverse=True)
+    return convs
 
-@app.get("/sesion/{session_id}")
-async def obtener_sesion(session_id: str):
-    if session_id not in sesiones:
-        raise HTTPException(status_code=404, detail="Sesion no encontrada")
-    orch = sesiones[session_id]
+@app.get("/api/conversations/{phone}")
+async def get_conversation(phone: str):
+    if phone not in sesiones:
+        raise HTTPException(status_code=404, detail="Not found")
+    info = sesiones[phone]
     return {
-        "session_id": session_id,
-        "session_data": orch.session_data,
-        "historial_length": len(orch.historial)
+        "phone": phone,
+        "agent_enabled": info["agent_enabled"],
+        "messages": info["messages"],
+        "session_data": info["orchestrator"].session_data
     }
 
+@app.post("/api/conversations/{phone}/toggle")
+async def toggle_agent(phone: str, req: ToggleRequest):
+    if phone not in sesiones:
+        _get_or_create_session(phone)
+    sesiones[phone]["agent_enabled"] = req.enabled
+    await ws_manager.broadcast({"type": "agent_toggled", "phone": phone, "enabled": req.enabled})
+    return {"status": "ok", "enabled": req.enabled}
 
-@app.delete("/sesion/{session_id}")
-async def limpiar_sesion(session_id: str):
-    if session_id in sesiones:
-        del sesiones[session_id]
-        return {"mensaje": "Sesion eliminada", "session_id": session_id}
-    raise HTTPException(status_code=404, detail="Sesion no encontrada")
+@app.post("/api/conversations/{phone}/send")
+async def manual_send(phone: str, req: SendMessageRequest):
+    if phone not in sesiones:
+        _get_or_create_session(phone)
+    
+    info = sesiones[phone]
+    info["messages"].append({"role": "human", "text": req.mensaje})
+    info["last_updated"] = asyncio.get_event_loop().time()
+    
+    await ws_manager.broadcast({"type": "new_message", "phone": phone})
+    
+    # Enviar por whatsapp
+    resultado = enviar_mensaje(f"{phone}@s.whatsapp.net", req.mensaje)
+    if not resultado.get("enviado"):
+        print(f"[ERROR] Envío manual fallido para {phone}: {resultado.get('error')}")
+        
+    return {"status": "ok"}
 
+# Endpoint para simulacion local (sin whatsapp real)
+@app.post("/api/conversations/{phone}/simulate_user")
+async def simulate_user(phone: str, req: SendMessageRequest, background_tasks: BackgroundTasks):
+    session_info = _get_or_create_session(phone)
+    session_info["last_updated"] = asyncio.get_event_loop().time()
+    session_info["messages"].append({"role": "user", "text": req.mensaje})
+    
+    await ws_manager.broadcast({"type": "new_message", "phone": phone})
+    
+    if session_info["agent_enabled"]:
+        background_tasks.add_task(procesar_agente_simulado, phone, req.mensaje)
+        
+    return {"status": "ok"}
+
+async def procesar_agente_simulado(phone: str, mensaje: str):
+    session_info = sesiones.get(phone)
+    if not session_info: return
+    
+    orch = session_info["orchestrator"]
+    try:
+        await ws_manager.broadcast({"type": "agent_typing", "phone": phone})
+        respuesta = await orch.procesar_mensaje(mensaje)
+        session_info["messages"].append({"role": "bot", "text": respuesta})
+        session_info["last_updated"] = asyncio.get_event_loop().time()
+        await ws_manager.broadcast({"type": "new_message", "phone": phone})
+    except Exception as e:
+        print(f"Error procesando simulacion para {phone}: {e}")
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
