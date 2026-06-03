@@ -847,3 +847,27 @@ Aquí el resumen de la matrícula:
 
 **Resumen final:**
 - ✅ **Pago verificado:** S
+2026-06-02 23:24:23 | INFO  | [ORCH] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | MENSAJE | fase=CAPTACION | msg=Hola, quiero información sobre las matrículas
+2026-06-02 23:24:28 | INFO  | [ORCH] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | → agente_sdr | fase=CAPTACION | input={"consulta": "Usuario nuevo interesado en información general sobre matrículas. Solicita información sobre ciclos académicos, precios y horarios disponibles en Academia Tesla."}
+2026-06-02 23:24:31 | INFO  | [ORCH] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | ← agente_sdr | OK 671 chars | 2945ms
+2026-06-02 23:24:35 | INFO  | [ORCH] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | RESPUESTA | fase=CAPTACION | ¡Genial! Nuestro equipo está listo para orientarte. 😊
+
+Para poder mostrarte los ciclos, horarios y precios más adecuados, necesitamos saber: **¿en qué
+2026-06-02 23:33:15 | INFO  | [ORCH] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | MENSAJE | fase=CAPTACION | msg=4to y 5to de Secundaria
+2026-06-02 23:33:19 | INFO  | [ORCH] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en información sobre matrículas para 4to y 5to de Secundaria. Necesita conocer los ciclos académicos disponibles, precios y horarios para esos grados."}
+2026-06-02 23:33:20 | INFO  | [SDR] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | tool=consultar_ciclos | input={"grado": "4to_secundaria"}
+2026-06-02 23:33:21 | INFO  | [SDR] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-06-02 23:33:23 | INFO  | [ORCH] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | ← agente_sdr | OK 755 chars | 4471ms
+2026-06-02 23:33:28 | INFO  | [ORCH] sid=5607d1e8-44c8-4b3b-8d47-4a3ba1558137 | RESPUESTA | fase=CAPTACION | Disculpa la demora, en este momento estamos experimentando un pequeño inconveniente técnico con nuestra base de datos de ciclos 😅. Pero no te preocupe
+2026-06-03 02:00:14 | INFO  | [ORCH] sid=48394d22-3ded-4f6f-8a54-c76ae2a6dfb2 | MENSAJE | fase=CAPTACION | msg=Hola, quiero información sobre las matrículas
+2026-06-03 02:00:20 | INFO  | [ORCH] sid=48394d22-3ded-4f6f-8a54-c76ae2a6dfb2 | → agente_sdr | fase=CAPTACION | input={"consulta": "Usuario nuevo interesado en información general sobre matrículas. Solicita información sobre ciclos académicos disponibles, precios y horarios."}
+2026-06-03 02:00:23 | INFO  | [ORCH] sid=48394d22-3ded-4f6f-8a54-c76ae2a6dfb2 | ← agente_sdr | OK 763 chars | 3107ms
+2026-06-03 02:00:28 | INFO  | [ORCH] sid=48394d22-3ded-4f6f-8a54-c76ae2a6dfb2 | RESPUESTA | fase=CAPTACION | ¡Perfecto! Nuestro equipo de admisiones está listo para ayudarte 😊
+
+Para poder mostrarte los ciclos disponibles con **precios, horarios y fechas de in
+2026-06-03 02:05:30 | INFO  | [ORCH] sid=d4811011-1dc0-4aac-a498-a1698ed7057d | MENSAJE | fase=CAPTACION | msg=Hola, quiero información sobre las matrículas
+2026-06-03 02:05:35 | INFO  | [ORCH] sid=d4811011-1dc0-4aac-a498-a1698ed7057d | → agente_sdr | fase=CAPTACION | input={"consulta": "Prospecto nuevo solicita información general sobre matrículas. Desea conocer ciclos académicos disponibles, precios y horarios. Es el primer contacto en la sesión."}
+2026-06-03 02:05:38 | INFO  | [ORCH] sid=d4811011-1dc0-4aac-a498-a1698ed7057d | ← agente_sdr | OK 714 chars | 3092ms
+2026-06-03 02:05:42 | INFO  | [ORCH] sid=d4811011-1dc0-4aac-a498-a1698ed7057d | RESPUESTA | fase=CAPTACION | ¡Perfecto! Nuestro especialista está listo para ayudarte 😊
+
+Para poder recomendarte el **ciclo académico ideal** y brindarte información exacta sobre 
