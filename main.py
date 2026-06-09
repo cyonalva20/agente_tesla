@@ -65,7 +65,9 @@ def _get_or_create_session(phone: str):
             "agent_enabled": True,
             "orchestrator": orch,
             "messages": [],
-            "last_updated": asyncio.get_event_loop().time()
+            "last_updated": asyncio.get_event_loop().time(),
+            "message_buffer": [],
+            "debounce_task": None
         }
     return sesiones[phone]
 
@@ -129,13 +131,40 @@ async def evolution_webhook(request: Request, background_tasks: BackgroundTasks)
         # Mensaje de usuario
         msg_obj = {"role": "user", "text": text}
         session_info["messages"].append(msg_obj)
+        session_info["message_buffer"].append(text)
         await ws_manager.broadcast({"type": "new_message", "phone": phone})
 
         # Procesar con Agente si esta activo
         if session_info["agent_enabled"]:
-            background_tasks.add_task(procesar_agente, phone, text)
+            if session_info.get("debounce_task"):
+                session_info["debounce_task"].cancel()
+            session_info["debounce_task"] = asyncio.create_task(
+                debounce_procesar_agente(phone)
+            )
         
     return {"status": "ok"}
+
+async def debounce_procesar_agente(phone: str, is_simulation: bool = False):
+    try:
+        await asyncio.sleep(8.0)
+    except asyncio.CancelledError:
+        return
+
+    session_info = sesiones.get(phone)
+    if not session_info: return
+
+    buffer = session_info.get("message_buffer", [])
+    if not buffer:
+        return
+    
+    mensaje_unido = " ".join(buffer)
+    session_info["message_buffer"] = []
+    session_info["debounce_task"] = None
+
+    if is_simulation:
+        await procesar_agente_simulado(phone, mensaje_unido)
+    else:
+        await procesar_agente(phone, mensaje_unido)
 
 async def procesar_agente(phone: str, mensaje: str):
     session_info = sesiones.get(phone)
@@ -221,11 +250,16 @@ async def simulate_user(phone: str, req: SendMessageRequest, background_tasks: B
     session_info = _get_or_create_session(phone)
     session_info["last_updated"] = asyncio.get_event_loop().time()
     session_info["messages"].append({"role": "user", "text": req.mensaje})
+    session_info["message_buffer"].append(req.mensaje)
     
     await ws_manager.broadcast({"type": "new_message", "phone": phone})
     
     if session_info["agent_enabled"]:
-        background_tasks.add_task(procesar_agente_simulado, phone, req.mensaje)
+        if session_info.get("debounce_task"):
+            session_info["debounce_task"].cancel()
+        session_info["debounce_task"] = asyncio.create_task(
+            debounce_procesar_agente(phone, is_simulation=True)
+        )
         
     return {"status": "ok"}
 

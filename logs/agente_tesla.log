@@ -871,3 +871,13 @@ Para poder mostrarte los ciclos disponibles con **precios, horarios y fechas de 
 2026-06-03 02:05:42 | INFO  | [ORCH] sid=d4811011-1dc0-4aac-a498-a1698ed7057d | RESPUESTA | fase=CAPTACION | ¡Perfecto! Nuestro especialista está listo para ayudarte 😊
 
 Para poder recomendarte el **ciclo académico ideal** y brindarte información exacta sobre 
+2026-06-09 10:20:01 | INFO  | [ORCH] sid=6fbe6d2b-ac52-43cf-9645-1eb16c730ef1 | MENSAJE | fase=CAPTACION | msg=hola
+2026-06-09 10:20:06 | INFO  | [ORCH] sid=6fbe6d2b-ac52-43cf-9645-1eb16c730ef1 | RESPUESTA | fase=CAPTACION | ¡Hola! Bienvenido/a a **Academia Tesla** 🎓
+
+Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícula, desde informarte sobre n
+2026-06-09 10:20:52 | INFO  | [ORCH] sid=6fbe6d2b-ac52-43cf-9645-1eb16c730ef1 | MENSAJE | fase=CAPTACION | msg=quiero saber informacion sobre mariculas
+2026-06-09 10:20:56 | INFO  | [ORCH] sid=6fbe6d2b-ac52-43cf-9645-1eb16c730ef1 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto saluda y desea obtener información general sobre matrículas: ciclos disponibles, precios y horarios."}
+2026-06-09 10:20:59 | INFO  | [ORCH] sid=6fbe6d2b-ac52-43cf-9645-1eb16c730ef1 | ← agente_sdr | OK 565 chars | 2950ms
+2026-06-09 10:21:03 | INFO  | [ORCH] sid=6fbe6d2b-ac52-43cf-9645-1eb16c730ef1 | RESPUESTA | fase=CAPTACION | ¡Tenemos varias opciones disponibles para ti! 📚
+
+Contamos con ciclos para distintos niveles: **CEPU, 4to de Secundaria, 5to de Secundaria, Repaso y Pr
