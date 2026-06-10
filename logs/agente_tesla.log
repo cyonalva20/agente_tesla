@@ -932,3 +932,23 @@ El ciclo **Intensivo de 5to de Secundaria** tiene el siguiente horario:
 2026-06-09 17:40:10 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=CIERRE | Entiendo tu solicitud, pero lamentablemente **no puedo generar documentos PDF** en esta etapa del proceso. 📄
 
 La constancia y documentos oficiales en 
+2026-06-09 23:49:59 | INFO  | [GRAPH] Grafo compilado sin persistencia (modo test)
+2026-06-10 00:06:57 | INFO  | [GRAPH] Grafo compilado con persistencia SQLite
+2026-06-10 00:08:30 | INFO  | [GRAPH] sid=1a8b0857-774e-44cd-966b-96512b435b88 | router raw → FASE:CAPTACION
+2026-06-10 00:08:30 | INFO  | [GRAPH] sid=1a8b0857-774e-44cd-966b-96512b435b88 | router → fase=CAPTACION updates={'fase': 'CAPTACION'}
+2026-06-10 00:08:30 | INFO  | [GRAPH] sid=1a8b0857-774e-44cd-966b-96512b435b88 | sdr_node | msg=Hola
+2026-06-10 00:08:30 | INFO  | [SDR] sid=1a8b0857-774e-44cd-966b-96512b435b88 | START | consulta=Hola
+2026-06-10 00:08:32 | INFO  | [SDR] sid=1a8b0857-774e-44cd-966b-96512b435b88 | END | respuesta=¡Hola! 👋 Bienvenido a Academia Tesla. Soy el Agente de Admisiones y estoy aquí para ayudarte. 🎓
+
+Para poder recomendarte el ciclo más adecuado, necesito saber:
+
+**¿En qué grado escolar está actualment
+2026-06-10 00:13:11 | INFO  | [GRAPH] sid=1a8b0857-774e-44cd-966b-96512b435b88 | router raw → FASE:CAPTACION
+2026-06-10 00:13:11 | INFO  | [GRAPH] sid=1a8b0857-774e-44cd-966b-96512b435b88 | router → fase=CAPTACION updates={'fase': 'CAPTACION'}
+2026-06-10 00:13:11 | INFO  | [GRAPH] sid=1a8b0857-774e-44cd-966b-96512b435b88 | sdr_node | msg=Quiero inscribirme
+2026-06-10 00:13:11 | INFO  | [SDR] sid=1a8b0857-774e-44cd-966b-96512b435b88 | START | consulta=Quiero inscribirme
+2026-06-10 00:13:14 | INFO  | [SDR] sid=1a8b0857-774e-44cd-966b-96512b435b88 | END | respuesta=¡Excelente! Me da gusto que desees inscribirte en Academia Tesla. 🎓
+
+Para poder recomendarte el ciclo más adecuado, necesito algunos datos:
+
+1. **¿Cuál es tu nombre?** (o el del apoderado si eres meno
