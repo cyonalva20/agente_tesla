@@ -107,7 +107,8 @@ class Orchestrator:
             "alumno_id": None,
             "charge_id": None,
             "intentos_fallidos": 0,
-            "session_id": str(uuid.uuid4())
+            "session_id": str(uuid.uuid4()),
+            "telefono": None
         }
 
     def _truncar_historial(self):
@@ -197,7 +198,7 @@ class Orchestrator:
 
         try:
             if tool_name == "agente_sdr":
-                result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid)
+                result = run_sdr_agent(inputs["consulta"], contexto, session_id=sid, telefono=self.session_data.get("telefono"))
             elif tool_name == "agente_administrativo":
                 result = run_admin_agent(inputs["datos"], contexto, session_id=sid)
             elif tool_name == "agente_financiero":
