@@ -18,7 +18,8 @@ PROCESO OBLIGATORIO:
 1. Identifica el grado escolar del alumno (cepu, 5to_secundaria, 4to_secundaria, repaso, pre_universitario)
 2. Llama a `consultar_ciclos` con ese grado para obtener opciones reales de Supabase
 3. Recomienda el ciclo más adecuado mostrando: nombre, precio en soles, horario, modalidad y fecha de inicio
-4. Si el prospecto muestra interés, llama a `registrar_lead` con sus datos
+4. Al momento de recomendar un ciclo, DEBES llamar proactivamente a `enviar_horario_pdf` con el código del ciclo para enviarle el horario.
+5. Si el prospecto muestra interés, llama a `registrar_lead` con sus datos
 
 TONO: Español peruano profesional. Amable y directo. Usa "usted" con apoderados. Emojis moderados: 🎓 📚 ✅
 RESTRICCIÓN: Nunca inventes precios ni horarios. Solo usa datos de `consultar_ciclos`."""
@@ -66,14 +67,30 @@ tools = [
             },
             "required": ["nombre_apoderado", "telefono", "grado", "ciclo_recomendado"]
         }
+    },
+    {
+        "name": "enviar_horario_pdf",
+        "description": "Envía el horario del ciclo en formato PDF proactivamente por WhatsApp. Úsalo SIEMPRE que recomiendes un ciclo específico.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "ciclo_codigo": {
+                    "type": "string",
+                    "description": "Código del ciclo del cual se enviará el horario, ej: G-SEC5-2025-B"
+                }
+            },
+            "required": ["ciclo_codigo"]
+        }
     }
 ]
 
 
-def ejecutar_tool(nombre: str, inputs: dict, session_id: str = None):
+def ejecutar_tool(nombre: str, inputs: dict, session_id: str = None, telefono: str = None):
     """Despacha la ejecución de tools del agente SDR."""
     from tools.supabase_client import consultar_ciclos, normalizar_grado
     from tools.pipedrive_client import registrar_lead
+    from tools.horarios import obtener_url_horario
+    from tools.evolution_whatsapp import enviar_documento
 
     sid = session_id or "-"
     inputs_log = json.dumps(inputs, ensure_ascii=False, default=str)[:300]
@@ -90,6 +107,19 @@ def ejecutar_tool(nombre: str, inputs: dict, session_id: str = None):
             inputs["grado"],
             inputs["ciclo_recomendado"]
         )
+    elif nombre == "enviar_horario_pdf":
+        url_pdf = obtener_url_horario(inputs["ciclo_codigo"])
+        if not url_pdf:
+            result = {"error": "No se pudo generar la URL del horario"}
+        elif not telefono:
+            result = {"error": "No hay teléfono en la sesión para enviar el horario"}
+        else:
+            caption = f"Aquí tienes el horario detallado del ciclo {inputs['ciclo_codigo']} 📅"
+            res = enviar_documento(telefono, url_pdf, caption)
+            if res.get("enviado"):
+                result = {"status": "ok", "mensaje": "Horario en PDF enviado exitosamente al prospecto"}
+            else:
+                result = {"error": f"Fallo al enviar el PDF: {res.get('error')}"}
     else:
         result = {"error": f"Tool '{nombre}' no reconocida"}
 
@@ -126,7 +156,8 @@ def _llamar_anthropic_con_retry(client, max_reintentos: int = 3, **kwargs):
 def run_sdr_agent(
     consulta: str,
     historial: list = None,
-    session_id: str = None
+    session_id: str = None,
+    telefono: str = None
 ) -> str:
     historial = historial or []
     messages = historial + [{"role": "user", "content": consulta}]
@@ -155,7 +186,7 @@ def run_sdr_agent(
         for block in response.content:
             if block.type == "tool_use":
                 try:
-                    result = ejecutar_tool(block.name, block.input, session_id=session_id)
+                    result = ejecutar_tool(block.name, block.input, session_id=session_id, telefono=telefono)
                 except ValueError as e:
                     result = {"error": str(e)}
                 except Exception as e:

@@ -60,6 +60,7 @@ async def websocket_endpoint(websocket: WebSocket):
 def _get_or_create_session(phone: str):
     if phone not in sesiones:
         orch = Orchestrator()
+        orch.session_data["telefono"] = phone
         sesiones[phone] = {
             "session_id": orch.session_data["session_id"],
             "agent_enabled": True,
@@ -107,13 +108,25 @@ async def evolution_webhook(request: Request, background_tasks: BackgroundTasks)
     
     # Extraer texto del mensaje
     message_content = msg_data.get("message", {})
-    text = ""
-    if "conversation" in message_content:
-        text = message_content["conversation"]
-    elif "extendedTextMessage" in message_content:
-        text = message_content["extendedTextMessage"].get("text", "")
+    
+    def _extract_text(msg_content: dict) -> str:
+        if not isinstance(msg_content, dict): return ""
+        if "conversation" in msg_content:
+            return msg_content["conversation"]
+        if "extendedTextMessage" in msg_content:
+            return msg_content["extendedTextMessage"].get("text", "")
+        if "ephemeralMessage" in msg_content:
+            return _extract_text(msg_content["ephemeralMessage"].get("message", {}))
+        if "viewOnceMessage" in msg_content:
+            return _extract_text(msg_content["viewOnceMessage"].get("message", {}))
+        if "viewOnceMessageV2" in msg_content:
+            return _extract_text(msg_content["viewOnceMessageV2"].get("message", {}))
+        return ""
+
+    text = _extract_text(message_content)
         
     if not text:
+        print(f"[WARN] Webhook ignorado (sin texto). message_keys: {list(message_content.keys())}")
         return {"status": "no_text"}
 
     session_info = _get_or_create_session(phone)
@@ -150,21 +163,24 @@ async def debounce_procesar_agente(phone: str, is_simulation: bool = False):
     except asyncio.CancelledError:
         return
 
-    session_info = sesiones.get(phone)
-    if not session_info: return
+    try:
+        session_info = sesiones.get(phone)
+        if not session_info: return
 
-    buffer = session_info.get("message_buffer", [])
-    if not buffer:
-        return
-    
-    mensaje_unido = " ".join(buffer)
-    session_info["message_buffer"] = []
-    session_info["debounce_task"] = None
+        buffer = session_info.get("message_buffer", [])
+        if not buffer:
+            return
+        
+        mensaje_unido = " ".join(buffer)
+        session_info["message_buffer"] = []
+        session_info["debounce_task"] = None
 
-    if is_simulation:
-        await procesar_agente_simulado(phone, mensaje_unido)
-    else:
-        await procesar_agente(phone, mensaje_unido)
+        if is_simulation:
+            await procesar_agente_simulado(phone, mensaje_unido)
+        else:
+            await procesar_agente(phone, mensaje_unido)
+    except Exception as e:
+        print(f"[ERROR] En debounce_procesar_agente para {phone}: {e}")
 
 async def procesar_agente(phone: str, mensaje: str):
     session_info = sesiones.get(phone)

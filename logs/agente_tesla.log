@@ -881,3 +881,54 @@ Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícu
 2026-06-09 10:21:03 | INFO  | [ORCH] sid=6fbe6d2b-ac52-43cf-9645-1eb16c730ef1 | RESPUESTA | fase=CAPTACION | ¡Tenemos varias opciones disponibles para ti! 📚
 
 Contamos con ciclos para distintos niveles: **CEPU, 4to de Secundaria, 5to de Secundaria, Repaso y Pr
+2026-06-09 17:26:01 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | MENSAJE | fase=CAPTACION | msg=Hola
+2026-06-09 17:26:05 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=CAPTACION | ¡Hola! 👋 Bienvenido/a a **Academia Tesla** 🎓
+
+Es un gusto saludarte. Estoy aquí para ayudarte con todo el proceso de matrícula de manera rápida y senc
+2026-06-09 17:26:14 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | MENSAJE | fase=CAPTACION | msg=Quiero Saber
+2026-06-09 17:26:18 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=CAPTACION | ¡Claro que sí! 😊 Con gusto te ayudo.
+
+¿Qué deseas saber? Puedes preguntarme sobre:
+
+- 📚 **Ciclos académicos** disponibles
+- 💰 **Precios y tarifas** de
+2026-06-09 17:29:46 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | MENSAJE | fase=CAPTACION | msg=Ciclos academicos
+2026-06-09 17:29:49 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto desea conocer información sobre los ciclos académicos disponibles en Academia Tesla."}
+2026-06-09 17:29:52 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | ← agente_sdr | OK 690 chars | 3018ms
+2026-06-09 17:29:56 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=CAPTACION | ¡Aquí tienes la información! 😊
+
+Para orientarte mejor con los ciclos disponibles, necesitamos saber: **¿en qué grado se encuentra el estudiante?**
+
+Pu
+2026-06-09 17:31:44 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | MENSAJE | fase=CAPTACION | msg=Esta en 4to de secundaria
+2026-06-09 17:31:47 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en conocer los ciclos académicos disponibles para un estudiante de 4to de secundaria. Por favor bríndale información sobre ciclos, horarios y precios disponibles para ese grado."}
+2026-06-09 17:31:48 | INFO  | [SDR] sid=4faf1903-9329-47df-b9db-f86645e59330 | tool=consultar_ciclos | input={"grado": "4to_secundaria"}
+2026-06-09 17:31:50 | INFO  | [SDR] sid=4faf1903-9329-47df-b9db-f86645e59330 | tool=consultar_ciclos | OK=[] | 2130ms
+2026-06-09 17:31:54 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | ← agente_sdr | OK 614 chars | 6834ms
+2026-06-09 17:31:59 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=CAPTACION | Según la información disponible, actualmente **no contamos con ciclos específicos para 4to de Secundaria** en nuestra programación. Sin embargo, tenem
+2026-06-09 17:32:29 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | MENSAJE | fase=CAPTACION | msg=Quinto de secundaria
+2026-06-09 17:32:32 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | → agente_sdr | fase=CAPTACION | input={"consulta": "El prospecto está interesado en inscribir a un estudiante de 5to de Secundaria. Necesita información sobre los ciclos académicos disponibles, precios y horarios para ese grado."}
+2026-06-09 17:32:33 | INFO  | [SDR] sid=4faf1903-9329-47df-b9db-f86645e59330 | tool=consultar_ciclos | input={"grado": "5to_secundaria"}
+2026-06-09 17:32:34 | INFO  | [SDR] sid=4faf1903-9329-47df-b9db-f86645e59330 | tool=consultar_ciclos | OK=[{"codigo": "G-SEC5-2026-A", "nombre": "Preparación 5to Secundaria - Básico", "grado": "5to_secundaria", "precio_soles": 600, "horario": "Sábados y Domingos 9:00am - 1:00pm", "fecha_inicio": "2026-06-06", "vacantes_disponibles": 40, "modalidad": "virtual"}, {"codigo": "G-SEC5-2026-B", "nombre": "Preparación 5to Secundaria - Intensivo", "grado": "5to_secundaria", "precio_soles": 750, "horario": "Lu | 1190ms
+2026-06-09 17:32:37 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | ← agente_sdr | OK 743 chars | 4740ms
+2026-06-09 17:32:41 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=CAPTACION | ¡Aquí tienes las opciones disponibles para **5to de Secundaria**! 📚
+
+| | **Básico** | **Intensivo** |
+|---|---|---|
+| 💰 Precio | S/ 600 | S/ 750 |
+| 🕐
+2026-06-09 17:35:12 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | MENSAJE | fase=CAPTACION | msg=Intensivo
+2026-06-09 17:35:16 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=REGISTRO | ¡Excelente elección! 🎓 El ciclo **Intensivo de 5to de Secundaria** es una opción muy completa.
+
+Para iniciar el proceso de inscripción, necesito los s
+2026-06-09 17:38:12 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | MENSAJE | fase=REGISTRO | msg=Me podrias dar el horario de clase antes
+2026-06-09 17:38:16 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=REGISTRO | ¡Por supuesto! 🕐
+
+El ciclo **Intensivo de 5to de Secundaria** tiene el siguiente horario:
+
+- 📅 **Días:** Lunes a Viernes
+- ⏰ **Hora:** 3:00 pm – 7:00 
+2026-06-09 17:40:05 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | MENSAJE | fase=REGISTRO | msg=En pdf porfa
+2026-06-09 17:40:10 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=CIERRE | Entiendo tu solicitud, pero lamentablemente **no puedo generar documentos PDF** en esta etapa del proceso. 📄
+
+La constancia y documentos oficiales en 
