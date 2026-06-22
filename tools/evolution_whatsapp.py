@@ -13,7 +13,7 @@ EVOLUTION_INSTANCE = os.getenv("EVOLUTION_INSTANCE")
 @tool
 def enviar_mensaje(telefono: str, mensaje: str) -> dict:
     """
-    Envía  un mensaje de texto por WhatsApp via Evolution API.
+    Envía un mensaje de texto por WhatsApp via Evolution API.
     POST {EVOLUTION_API_URL}/message/sendText/{EVOLUTION_INSTANCE}
     Header: apikey: {EVOLUTION_API_KEY}
     Body: {"number": telefono, "text": mensaje}

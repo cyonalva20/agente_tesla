@@ -932,3 +932,19 @@ El ciclo **Intensivo de 5to de Secundaria** tiene el siguiente horario:
 2026-06-09 17:40:10 | INFO  | [ORCH] sid=4faf1903-9329-47df-b9db-f86645e59330 | RESPUESTA | fase=CIERRE | Entiendo tu solicitud, pero lamentablemente **no puedo generar documentos PDF** en esta etapa del proceso. 📄
 
 La constancia y documentos oficiales en 
+2026-06-21 23:55:47 | INFO  | [ORCH] sid=d3e9f4dd-9d1c-4fe8-b6e0-5e4114513169 | MENSAJE | fase=CAPTACION | msg=Hola, quiero información
+2026-06-21 23:55:52 | INFO  | [ORCH] sid=d3e9f4dd-9d1c-4fe8-b6e0-5e4114513169 | → agente_sdr | fase=CAPTACION | input={"consulta": "Usuario nuevo solicita información general sobre la academia. Saludo inicial, desea conocer qué ofrecemos: ciclos académicos, precios y horarios disponibles."}
+2026-06-21 23:55:56 | INFO  | [ORCH] sid=d3e9f4dd-9d1c-4fe8-b6e0-5e4114513169 | ← agente_sdr | OK 973 chars | 3874ms
+2026-06-21 23:56:00 | INFO  | [ORCH] sid=d3e9f4dd-9d1c-4fe8-b6e0-5e4114513169 | RESPUESTA | fase=CAPTACION | ¡Aquí tienes! 😊 En **Academia Tesla** contamos con diferentes ciclos académicos pensados para cada necesidad:
+
+- 🎯 **CEPU** — Para postulantes a unive
+2026-06-22 00:00:44 | INFO  | [ORCH] sid=08d8296e-84cc-4be7-9354-59bfd32239e9 | MENSAJE | fase=CAPTACION | msg=Hola, quiero información
+2026-06-22 00:00:48 | INFO  | [ORCH] sid=08d8296e-84cc-4be7-9354-59bfd32239e9 | → agente_sdr | fase=CAPTACION | input={"consulta": "Prospecto nuevo solicita información general sobre la academia. Desea conocer los ciclos académicos disponibles, precios y horarios. Session ID: 08d8296e-84cc-4be7-9354-59bfd32239e9"}
+2026-06-22 00:00:51 | INFO  | [ORCH] sid=08d8296e-84cc-4be7-9354-59bfd32239e9 | ← agente_sdr | OK 554 chars | 2481ms
+2026-06-22 00:00:55 | INFO  | [ORCH] sid=08d8296e-84cc-4be7-9354-59bfd32239e9 | RESPUESTA | fase=CAPTACION | ¡Excelente! Te comparto lo que nuestro equipo de admisiones necesita saber para orientarte mejor:
+
+**¿Para qué grado o nivel es la inscripción?** Cont
+2026-06-22 00:01:47 | INFO  | [ORCH] sid=08d8296e-84cc-4be7-9354-59bfd32239e9 | MENSAJE | fase=CAPTACION | msg=que tal
+2026-06-22 00:01:52 | INFO  | [ORCH] sid=08d8296e-84cc-4be7-9354-59bfd32239e9 | RESPUESTA | fase=CAPTACION | ¡Hola! 😊 Todo bien por acá, listo para ayudarte con tu proceso de matrícula en **Academia Tesla**.
+
+Para orientarte mejor, déjame consultarte: **¿qué 

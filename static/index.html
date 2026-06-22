@@ -510,7 +510,10 @@
     <aside class="conv-list-panel">
         <div class="panel-header">
             <span>Conversaciones Activas</span>
-            <button onclick="fetchConversations()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;">🔄</button>
+            <div>
+                <button onclick="crearChatSimulado()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;margin-right:8px;" title="Nueva Simulación">➕</button>
+                <button onclick="fetchConversations()" style="background:none;border:none;color:var(--text-muted);cursor:pointer;" title="Actualizar">🔄</button>
+            </div>
         </div>
         <div class="conv-list" id="conv-list">
             <!-- Conversaciones -->
@@ -815,6 +818,27 @@
         } else {
             el.textContent = '—';
             el.classList.add('empty');
+        }
+    }
+
+    // === Crear Chat de Prueba ===
+    async function crearChatSimulado() {
+        const phone = prompt("Ingresa un número de teléfono para simular (ej. 51999999999):");
+        if (!phone) return;
+        
+        // Enviamos un saludo invisible para que el backend cree la sesión
+        try {
+            await fetch(`/api/conversations/${phone}/simulate_user`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ mensaje: "Hola, quiero información" })
+            });
+            
+            // Refrescamos la lista y abrimos el chat automáticamente
+            await fetchConversations();
+            selectConversation(phone);
+        } catch (e) {
+            console.error("Error creando simulación", e);
         }
     }
 
