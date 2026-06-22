@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from langchain_core.tools import tool
 
 load_dotenv()
 
@@ -9,6 +10,7 @@ EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY")
 EVOLUTION_INSTANCE = os.getenv("EVOLUTION_INSTANCE")
 
 
+@tool
 def enviar_mensaje(telefono: str, mensaje: str) -> dict:
     """
     Envía un mensaje de texto por WhatsApp via Evolution API.
@@ -44,6 +46,7 @@ def enviar_mensaje(telefono: str, mensaje: str) -> dict:
         }
 
 
+@tool
 def enviar_documento(telefono: str, pdf_url: str, caption: str) -> dict:
     """
     Envía un documento PDF por WhatsApp via Evolution API.

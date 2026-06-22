@@ -1,6 +1,7 @@
 import os
 import requests
 from dotenv import load_dotenv
+from langchain_core.tools import tool
 
 load_dotenv()
 
@@ -9,7 +10,7 @@ PIPEDRIVE_DOMAIN = os.getenv("PIPEDRIVE_DOMAIN")
 
 BASE_URL = f"https://{PIPEDRIVE_DOMAIN}.pipedrive.com/api/v1"
 
-
+@tool
 def registrar_lead(nombre_apoderado: str, telefono: str, grado: str, ciclo_recomendado: str) -> dict:
     """
     Registra un lead en Pipedrive CRM.

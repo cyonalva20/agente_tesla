@@ -7,8 +7,9 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
 import qrcode
 from io import BytesIO
+from langchain_core.tools import tool
 
-
+@tool
 def generar_constancia(alumno: dict, ciclo: dict) -> str:
     """
     Genera un PDF de constancia de matrícula usando reportlab.

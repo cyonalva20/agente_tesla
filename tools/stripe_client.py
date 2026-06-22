@@ -1,12 +1,14 @@
 import os
 import stripe
 from dotenv import load_dotenv
+from langchain_core.tools import tool
 
 load_dotenv()
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 
+@tool
 def verificar_pago(charge_id: str) -> dict:
     """
     Verifica el estado de un pago en Stripe.

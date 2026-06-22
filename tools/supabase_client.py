@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timezone
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from langchain_core.tools import tool
 
 load_dotenv()
 
@@ -21,6 +22,7 @@ def _get_client() -> Client:
     return _supabase_client
 
 
+@tool
 def consultar_ciclos(grado: str) -> list:
     """
     Consulta ciclos académicos disponibles para un grado específico.
@@ -36,6 +38,7 @@ def consultar_ciclos(grado: str) -> list:
     return response.data
 
 
+@tool
 def upsert_alumno(datos: dict) -> dict:
     """
     Inserta o actualiza un alumno en la tabla alumnos.
@@ -50,6 +53,7 @@ def upsert_alumno(datos: dict) -> dict:
     return response.data[0] if response.data else {}
 
 
+@tool
 def actualizar_estado_alumno(alumno_id: str, nuevo_estado: str, metadata: dict = {}) -> dict:
     """
     Actualiza el estado de un alumno y registra el cambio en historial_estados.
@@ -88,6 +92,7 @@ def actualizar_estado_alumno(alumno_id: str, nuevo_estado: str, metadata: dict =
     return response.data[0] if response.data else {}
 
 
+@tool
 def obtener_alumno_por_dni(dni: str) -> dict | None:
     """
     Busca un alumno por su DNI.
@@ -104,6 +109,7 @@ def obtener_alumno_por_dni(dni: str) -> dict | None:
     return response.data[0] if response.data else None
 
 
+@tool
 def obtener_alumno_por_id(alumno_id: str) -> dict | None:
     """
     Busca un alumno por su ID (UUID).
@@ -120,6 +126,7 @@ def obtener_alumno_por_id(alumno_id: str) -> dict | None:
     return response.data[0] if response.data else None
 
 
+@tool
 def consultar_ciclo_por_codigo(codigo: str) -> dict | None:
     """
     Busca un ciclo académico por su código.
