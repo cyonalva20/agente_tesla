@@ -10,15 +10,8 @@ EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY")
 EVOLUTION_INSTANCE = os.getenv("EVOLUTION_INSTANCE")
 
 
-@tool
-def enviar_mensaje(telefono: str, mensaje: str) -> dict:
-    """
-    Envía  un mensaje de texto por WhatsApp via Evolution API.
-    POST {EVOLUTION_API_URL}/message/sendText/{EVOLUTION_INSTANCE}
-    Header: apikey: {EVOLUTION_API_KEY}
-    Body: {"number": telefono, "text": mensaje}
-    Retorna {"enviado": True} o {"enviado": False, "error": ...}
-    """
+def enviar_mensaje_raw(telefono: str, mensaje: str) -> dict:
+    """Implementación raw para uso directo (ej: main.py envía WhatsApp sin pasar por LangChain)."""
     url = f"{EVOLUTION_API_URL}/message/sendText/{EVOLUTION_INSTANCE}"
     headers = {
         "apikey": EVOLUTION_API_KEY,
@@ -44,6 +37,15 @@ def enviar_mensaje(telefono: str, mensaje: str) -> dict:
             "enviado": False,
             "error": f"Error de conexión: {str(e)}"
         }
+
+
+@tool
+def enviar_mensaje(telefono: str, mensaje: str) -> dict:
+    """
+    Envía un mensaje de texto por WhatsApp via Evolution API.
+    Retorna {"enviado": True} o {"enviado": False, "error": ...}
+    """
+    return enviar_mensaje_raw(telefono, mensaje)
 
 
 @tool

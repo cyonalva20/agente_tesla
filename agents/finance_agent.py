@@ -21,5 +21,5 @@ finance_tools = [
 finance_agent = create_react_agent(
     model=llm,
     tools=finance_tools,
-    state_modifier=FINANCIERO_SYSTEM_PROMPT
+    prompt=FINANCIERO_SYSTEM_PROMPT
 )

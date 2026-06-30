@@ -11,5 +11,5 @@ admin_tools = [validar_dni, upsert_alumno]
 admin_agent = create_react_agent(
     model=llm,
     tools=admin_tools,
-    state_modifier=ADMINISTRATIVO_SYSTEM_PROMPT
+    prompt=ADMINISTRATIVO_SYSTEM_PROMPT
 )

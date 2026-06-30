@@ -96,21 +96,21 @@ def upsert_alumno(datos: dict) -> dict:
     return response.data[0] if response.data else {}
 
 
+@tool
 def actualizar_estado_alumno(
     alumno_id: str,
     nuevo_estado: str,
-    metadata: dict = None,       # ✅ Fix: default mutable corregido
-    session_id: str = None       # ✅ Nuevo: session_id persistido
+    metadata: dict = None,
 ) -> dict:
     """
     Actualiza el estado de un alumno y registra el cambio en historial_estados.
     1. Obtiene el estado anterior del alumno.
     2. UPDATE alumnos SET estado=nuevo_estado WHERE id=alumno_id.
     3. INSERT en historial_estados con estado_anterior, estado_nuevo,
-       metadata, session_id y timestamp=now().
+       metadata y timestamp=now().
     Retorna el registro actualizado.
     """
-    metadata = metadata or {}   # ✅ Fix: evita default mutable compartido
+    metadata = metadata or {}
 
     # 1. Obtener estado anterior
     alumno_actual = (
@@ -139,18 +139,28 @@ def actualizar_estado_alumno(
             "estado_anterior": estado_anterior,
             "estado_nuevo":    nuevo_estado,
             "metadata":        metadata,
-            "session_id":      session_id,   # ✅ Nuevo: persiste el session_id
             "timestamp":       datetime.now(timezone.utc).isoformat()
         }).execute()
     )
 
-    # ✅ Nuevo: error explícito si el historial no se guardó
     if not historial_response.data:
         raise RuntimeError(
             f"Error al registrar historial para alumno {alumno_id}"
         )
 
     return response.data[0] if response.data else {}
+
+
+def _obtener_alumno_por_dni_raw(dni: str) -> dict | None:
+    """Implementación raw para uso directo (ej: fallback en reniec.py)."""
+    response = (
+        _get_client().table("alumnos")
+        .select("*")
+        .eq("dni_alumno", dni)
+        .limit(1)
+        .execute()
+    )
+    return response.data[0] if response.data else None
 
 
 @tool
@@ -160,14 +170,7 @@ def obtener_alumno_por_dni(dni: str) -> dict | None:
     SELECT * FROM alumnos WHERE dni_alumno=dni LIMIT 1.
     Retorna el registro o None si no existe.
     """
-    response = (
-        _get_client().table("alumnos")
-        .select("*")
-        .eq("dni_alumno", dni)
-        .limit(1)
-        .execute()
-    )
-    return response.data[0] if response.data else None
+    return _obtener_alumno_por_dni_raw(dni)
 
 
 @tool

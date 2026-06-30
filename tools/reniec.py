@@ -9,7 +9,7 @@ APIPERU_TOKEN = os.getenv("APIPERU_TOKEN")
 
 @tool
 def validar_dni(dni: str) -> dict:
-    # ✅ URL correcta
+    """Valida un DNI peruano de 8 dígitos contra RENIEC. Retorna nombres oficiales si es válido."""
     url = f"https://api.decolecta.com/v1/reniec/dni?numero={dni}"
     headers = {"Authorization": f"Bearer {APIPERU_TOKEN}"}
 
@@ -41,8 +41,8 @@ def _validar_dni_supabase(dni: str) -> dict:
     Útil cuando RENIEC no está disponible o el token expiró.
     """
     try:
-        from tools.supabase_client import obtener_alumno_por_dni
-        alumno = obtener_alumno_por_dni(dni)
+        from tools.supabase_client import _obtener_alumno_por_dni_raw
+        alumno = _obtener_alumno_por_dni_raw(dni)
 
         if alumno:
             print(f"[RENIEC] DNI {dni} → encontrado en Supabase (fallback)")
