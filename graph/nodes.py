@@ -1,7 +1,7 @@
 from core.estado import AgenteTeslaState
 from core.llm import llm_haiku, llm
 from core.prompts import planner_prompt
-from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage, AIMessage, ToolMessage
 import json
 
 
@@ -17,14 +17,25 @@ def node_planificador(state: AgenteTeslaState):
     fase = state.get("fase", "CAPTACION")
     iteraciones = state.get("iteraciones", 0)
     
+    # Filtrar SystemMessages del historial para evitar el error
+    # "Received multiple non-consecutive system messages" de Anthropic.
+    # El planner_prompt ya inyecta su propio SystemMessage al inicio;
+    # cualquier SystemMessage residual (p.ej. del crítico) en el historial
+    # genera mensajes de sistema no consecutivos que Anthropic rechaza.
+    filtered_messages = [
+        msg for msg in messages
+        if not isinstance(msg, SystemMessage)
+    ]
+    
     # Prompting al LLM rápido para decidir qué agente ejecutar
     prompt_value = planner_prompt.invoke({
-        "messages": messages,
+        "messages": filtered_messages,
         "fase": fase,
         "dni_alumno": state.get("dni_alumno", "Aún no proporcionado"),
         "ciclo_codigo": state.get("ciclo_codigo", "Aún no seleccionado"),
         "alumno_id": state.get("alumno_id", "No registrado aún"),
         "charge_id": state.get("charge_id", "No proporcionado"),
+        "email_pago": state.get("email_pago", "No proporcionado"),
         "intentos_fallidos": iteraciones
     })
     
@@ -84,10 +95,10 @@ Respuesta a evaluar:
 \"{last_message}\"
 
 Reglas:
-1. Si la respuesta pide datos que ya se tienen en la sesión → RECHAZADO
-2. Si la respuesta inventa precios o ciclos no verificados → RECHAZADO
+1. Es NORMAL y ESPERADO que el agente pida el nombre del apoderado, el DNI o el teléfono si el usuario aún no los ha dado explícitamente. No asumas que ya los tiene.
+2. ASUME que los precios, horarios y códigos de ciclos mostrados por el agente SON CORRECTOS y han sido extraídos de la base de datos mediante herramientas. NO lo rechaces por "inventar precios" a menos que sea algo ilógico o absurdo.
 3. Si la respuesta es grosera o inapropiada → RECHAZADO
-4. En cualquier otro caso razonable → APROBADO
+4. En cualquier otro caso razonable (como pedir datos para continuar el proceso, dar opciones de ciclos, o confirmar una validación) → APROBADO
 
 Responde en formato JSON estructurado."""
     
@@ -115,12 +126,13 @@ Responde en formato JSON estructurado."""
     
     eval_output = structured_llm.invoke([HumanMessage(content=eval_prompt)])
     
-    # Si fue rechazado, agregamos feedback como SystemMessage para corrección
+    # Si fue rechazado, agregamos feedback como HumanMessage (no SystemMessage)
+    # para evitar "multiple non-consecutive system messages" de Anthropic.
     if eval_output.get("veredicto") == "RECHAZADO":
         return {
             "veredicto": "RECHAZADO",
-            "messages": [SystemMessage(
-                content=f"Crítica interna: {eval_output.get('feedback')}. "
+            "messages": [HumanMessage(
+                content=f"[FEEDBACK INTERNO DEL CRÍTICO]: {eval_output.get('feedback')}. "
                         f"Por favor, corrige tu respuesta."
             )]
         }

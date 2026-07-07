@@ -10,14 +10,25 @@ from graph.nodes import node_planificador, node_critico, MAX_ITERACIONES
 from agents.sdr_agent import sdr_agent
 from agents.admin_agent import admin_agent
 from agents.finance_agent import finance_agent
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, SystemMessage
+
+
+def _filter_system_messages(messages: list) -> list:
+    """
+    Filtra SystemMessages del historial de conversación.
+    Cada sub-agente (create_react_agent) ya inyecta su propio system prompt;
+    pasar SystemMessages residuales del estado acumulado genera el error
+    'Received multiple non-consecutive system messages' de Anthropic.
+    """
+    return [msg for msg in messages if not isinstance(msg, SystemMessage)]
 
 
 # ── Envoltorios para sub-grafos ReAct ──────────────────────────────
 
 async def call_sdr(state: AgenteTeslaState):
     """Invoca el sub-agente SDR (ReAct) y retorna su última respuesta."""
-    response = await sdr_agent.ainvoke({"messages": state["messages"]})
+    clean_messages = _filter_system_messages(state["messages"])
+    response = await sdr_agent.ainvoke({"messages": clean_messages})
     return {
         "messages": response["messages"][-1:],
         "fase": "CAPTACION"
@@ -26,7 +37,15 @@ async def call_sdr(state: AgenteTeslaState):
 
 async def call_admin(state: AgenteTeslaState):
     """Invoca el sub-agente Administrativo (ReAct) y retorna su última respuesta."""
-    response = await admin_agent.ainvoke({"messages": state["messages"]})
+    clean_messages = _filter_system_messages(state["messages"])
+    
+    ciclo_codigo = state.get("ciclo_codigo")
+    if ciclo_codigo:
+        clean_messages = [
+            SystemMessage(content=f"INSTRUCCIÓN CRÍTICA: El código exacto del ciclo seleccionado es '{ciclo_codigo}'. DEBES usar este valor exacto para el parámetro ciclo_codigo en upsert_alumno.")
+        ] + clean_messages
+        
+    response = await admin_agent.ainvoke({"messages": clean_messages})
     return {
         "messages": response["messages"][-1:],
         "fase": "REGISTRO"
@@ -35,7 +54,8 @@ async def call_admin(state: AgenteTeslaState):
 
 async def call_finance(state: AgenteTeslaState):
     """Invoca el sub-agente Financiero (ReAct) y retorna su última respuesta."""
-    response = await finance_agent.ainvoke({"messages": state["messages"]})
+    clean_messages = _filter_system_messages(state["messages"])
+    response = await finance_agent.ainvoke({"messages": clean_messages})
     return {
         "messages": response["messages"][-1:],
         "fase": "CIERRE"

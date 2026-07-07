@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-
+from pydantic import BaseModel, Field
+from typing import Optional
 load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -77,15 +78,27 @@ def consultar_ciclos(grado: str) -> list:
     return response.data
 
 
-@tool
-def upsert_alumno(datos: dict) -> dict:
+class AlumnoInput(BaseModel):
+    dni_alumno: str = Field(..., description="DNI del alumno")
+    nombres: str = Field(..., description="Nombres del alumno")
+    apellidos: str = Field(..., description="Apellidos del alumno")
+    grado: str = Field(..., description="Grado del alumno")
+    apoderado_nombre: str = Field(..., description="Nombre completo del apoderado")
+    apoderado_dni: str = Field(..., description="DNI del apoderado")
+    apoderado_telefono: str = Field(..., description="Teléfono del apoderado (formato +51...)")
+    ciclo_codigo: Optional[str] = Field(None, description="Código EXACTO del ciclo en base de datos (ej. G-SEC5-2026-B). NO uses descripciones.")
+    estado: Optional[str] = Field("Registrado", description="Estado del alumno")
+
+@tool(args_schema=AlumnoInput)
+def upsert_alumno(**kwargs) -> dict:
     """
     Inserta o actualiza un alumno en la tabla alumnos.
     UPSERT con onConflict='dni_alumno'.
     Retorna el registro completo con id generado.
     """
+    datos = kwargs
     # ✅ Normalizar grado antes de persistir para mantener consistencia
-    if "grado" in datos:
+    if "grado" in datos and datos["grado"]:
         datos["grado"] = normalizar_grado(datos["grado"])
 
     response = (
@@ -173,20 +186,37 @@ def obtener_alumno_por_dni(dni: str) -> dict | None:
     return _obtener_alumno_por_dni_raw(dni)
 
 
+import uuid
+
 @tool
 def obtener_alumno_por_id(alumno_id: str) -> dict | None:
     """
-    Busca un alumno por su ID (UUID).
-    SELECT * FROM alumnos WHERE id=alumno_id LIMIT 1.
+    Busca un alumno por su ID (UUID). Si el ID no es un UUID válido,
+    asume que es un DNI y busca por dni_alumno.
     Retorna el registro o None si no existe.
     """
-    response = (
-        _get_client().table("alumnos")
-        .select("*")
-        .eq("id", alumno_id)
-        .limit(1)
-        .execute()
-    )
+    try:
+        uuid.UUID(str(alumno_id))
+        is_uuid = True
+    except ValueError:
+        is_uuid = False
+
+    if is_uuid:
+        response = (
+            _get_client().table("alumnos")
+            .select("*")
+            .eq("id", alumno_id)
+            .limit(1)
+            .execute()
+        )
+    else:
+        response = (
+            _get_client().table("alumnos")
+            .select("*")
+            .eq("dni_alumno", alumno_id)
+            .limit(1)
+            .execute()
+        )
     return response.data[0] if response.data else None
 
 

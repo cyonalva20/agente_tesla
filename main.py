@@ -18,6 +18,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from langchain_core.messages import HumanMessage
+from langchain_core.globals import set_debug
+
+# Activar logs detallados para facilitar el debug de los agentes
+set_debug(True)
+
 from graph.orchestrator import compiled_graph
 from tools.evolution_whatsapp import enviar_mensaje_raw
 
@@ -128,8 +133,16 @@ async def procesar_agente(phone: str, mensaje: str):
         if result.get("messages"):
             for msg in reversed(result["messages"]):
                 if hasattr(msg, "content") and msg.type == "ai":
-                    respuesta = msg.content
-                    break
+                    content = msg.content
+                    if isinstance(content, str):
+                        respuesta = content
+                    elif isinstance(content, list):
+                        text_blocks = [blk["text"] for blk in content if isinstance(blk, dict) and blk.get("type") == "text"]
+                        if text_blocks:
+                            respuesta = "\n".join(text_blocks)
+                    
+                    if respuesta.strip():
+                        break
         
         if not respuesta:
             respuesta = "Lo siento, no pude procesar tu solicitud. ¿Podrías reformular tu mensaje?"
