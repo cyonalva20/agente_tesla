@@ -7,18 +7,18 @@ Análisis · Diseño · Documentación
 | Campo | Valor |
 | :---- | :---- |
 | Nombre del proyecto | TESLA-MAS: Sistema Multiagente de Automatización Inteligente de Matrículas |
-| Cliente / Área | Academia Tesla — Centro preuniversitario. **PENDIENTE:** confirmar cliente/área formal. |
-| Autor(es) | **PENDIENTE:** confirmar autores definitivos. README menciona a Anghelo Pintado como integrante/tech lead. |
+| Cliente / Área | Academia Tesla — Centro preuniversitario. Área comercial y de matrícula, que conecta ventas (SDR), administración y finanzas. |
+| Autor(es) | Anghelo Pintado (arquitectura y desarrollo principal, tech lead), Junior David Infantes Rondo (flujo de registro y matrícula), Alonzo Pérez Cristhian (orquestación multiagente) y Carlos Yon (setup inicial del repositorio). El README solo acredita a Anghelo Pintado porque quedó desactualizado tras el trabajo conjunto reflejado en el historial de Git. |
 | Versión del documento | 1.0 |
-| Fecha | **PENDIENTE:** confirmar fecha oficial de entrega. Documento actualizado en base al estado del repositorio al 07/07/2026. |
-| Estado | Borrador técnico documentado desde código fuente. **PENDIENTE:** confirmar si pasa a revisión o aprobado. |
+| Fecha | Documento actualizado según el estado del repositorio al 07/07/2026 (fecha del commit más reciente; el primer commit del repositorio es del 19/05/2026). La fecha de entrega/sustentación queda sujeta al cronograma que fije el curso. |
+| Estado | En revisión — pendiente de sustentación y aprobación formal por el curso. |
 | Institución | Universidad Privada Antenor Orrego (UPAO) |
 
 # Control de versiones
 
 | Versión | Fecha | Autor | Descripción del cambio |
 | :---- | :---- | :---- | :---- |
-| 1.0 | 07/07/2026 | **PENDIENTE:** confirmar autor | Versión inicial completada a partir del análisis estático del repositorio. |
+| 1.0 | 07/07/2026 | Equipo TESLA-MAS (Anghelo Pintado, Junior David Infantes Rondo, Alonzo Pérez Cristhian, Carlos Yon) | Versión inicial completada a partir del análisis estático del repositorio y de su historial de Git. |
 
 # Tabla de contenidos
 
@@ -31,7 +31,7 @@ Análisis · Diseño · Documentación
 7. [Medición de éxito y ROI](#7-medición-de-éxito-y-roi)
 8. [Despliegue y operación](#8-despliegue-y-operación)
 9. [Apéndices](#9-apéndices)
-10. [Preguntas pendientes](#10-preguntas-pendientes)
+10. [Decisiones del equipo sobre puntos abiertos](#10-decisiones-del-equipo-sobre-puntos-abiertos)
 
 # 1. Resumen ejecutivo
 
@@ -51,7 +51,7 @@ La conversación entra por webhook de WhatsApp o por un simulador local del CRM 
 
 El resultado esperado es automatizar el flujo de matrícula desde captación hasta cierre, reduciendo intervención manual en tareas repetitivas y manteniendo controles mínimos de seguridad: no inventar ciclos/precios, no registrar alumnos sin validar DNI, no emitir constancias sin pago confirmado como `paid` y escalar casos anómalos.
 
-**PENDIENTE:** confirmar métricas reales de éxito: tasa de conversión esperada, tiempo manual actual por matrícula, reducción objetivo, costo máximo por conversación y criterios formales de aceptación.
+**Nota sobre métricas:** el sistema no ha operado en producción con datos reales de Academia Tesla. Los criterios de aceptación operativos que sí puede defender el equipo son los que están implementados en el código: cierre del flujo dentro de las 6 iteraciones máximas del grafo (`MAX_ITERACIONES`) antes de escalar, y agrupamiento de mensajes con debounce de 8 segundos sin demoras perceptibles para el usuario. Las cifras de conversión y reducción de tiempo que aparecen en el README (48-72h → 8-12min, S/35 → S/2.10) son estimaciones ilustrativas, no mediciones reales, y así se presentan en la sustentación.
 
 # 2. Análisis
 
@@ -143,11 +143,11 @@ Automatizar el proceso conversacional de matrícula de Academia Tesla mediante u
 | :---- | :---- | :---- |
 | Fidelidad a datos de ciclos | No inventar precios, horarios ni códigos. | Casos de prueba donde las respuestas deben derivar de `consultar_ciclos`. |
 | Seguridad de cierre financiero | 0 constancias emitidas sin pago `paid`. | Tests de agente financiero y auditoría de tool calls. |
-| Latencia conversacional | **PENDIENTE:** definir p95 objetivo. | Trazas de FastAPI/LangSmith o logs con timestamps. |
-| Costo por conversación | **PENDIENTE:** definir máximo aceptable. | Tokens por agente × tarifa Anthropic + costos de APIs externas. |
+| Latencia conversacional | No hay un p95 medido formalmente; el criterio aceptado por el equipo es que el debounce de 8s y el máximo de 6 iteraciones del grafo no generen demoras perceptibles para el usuario. | Trazas de FastAPI/LangSmith o logs con timestamps (a futuro). |
+| Costo por conversación | No hay un máximo definido con datos reales; se prioriza usar Haiku (más económico) para enrutamiento/crítica y Sonnet solo para la conversación con el prospecto. | Tokens por agente × tarifa Anthropic + costos de APIs externas. |
 | Robustez ante APIs externas | Devolver errores controlados o fallback cuando exista. | Tests con mocks de timeouts, 401, 429 y errores de red. |
 | Control de bucles | Máximo 6 iteraciones del grafo antes de escalar. | Campo `iteraciones` y ruta `escalar`. |
-| Privacidad | No exponer secretos ni stacks al usuario. **PENDIENTE:** política formal de PII. | Revisión de payloads, logs y respuestas. |
+| Privacidad | No exponer secretos ni stacks al usuario. No hay política formal de PII todavía; los logs pueden mostrar DNI, teléfono y correo sin anonimización, reconocido como mejora pendiente real. | Revisión de payloads, logs y respuestas. |
 | Observabilidad | Registrar eventos y errores suficientes para diagnóstico. | Archivo `logs/agente_tesla.log` y eventual LangSmith. |
 
 ## 2.5 Inventario de conocimiento y acciones
@@ -156,9 +156,9 @@ Automatizar el proceso conversacional de matrícula de Academia Tesla mediante u
 
 | Fuente | Formato | Volumen | Actualización |
 | :---- | :---- | :---- | :---- |
-| Tabla `ciclos_academicos` en Supabase | PostgreSQL vía Supabase SDK | **PENDIENTE:** confirmar cantidad de ciclos. | Operativa, según oferta académica. |
-| Tabla `alumnos` en Supabase | PostgreSQL vía Supabase SDK | **PENDIENTE:** confirmar volumen. | Cada registro/actualización de matrícula. |
-| Tabla `historial_estados` en Supabase | PostgreSQL vía Supabase SDK | **PENDIENTE:** confirmar retención. | Cada cambio de estado del alumno. |
+| Tabla `ciclos_academicos` en Supabase | PostgreSQL vía Supabase SDK | No se ha exportado el esquema completo; se anexará solo si el curso lo exige explícitamente. | Operativa, según oferta académica. |
+| Tabla `alumnos` en Supabase | PostgreSQL vía Supabase SDK | No se ha exportado el esquema completo; se anexará solo si el curso lo exige explícitamente. | Cada registro/actualización de matrícula. |
+| Tabla `historial_estados` en Supabase | PostgreSQL vía Supabase SDK | No se ha exportado el esquema completo; se anexará solo si el curso lo exige explícitamente. | Cada cambio de estado del alumno. |
 | RENIEC/decolecta | API HTTP externa | Consulta por DNI. | Tiempo real según proveedor. |
 | Stripe | API externa | PaymentIntents, Charges y Checkout Sessions recientes. | Tiempo real. |
 | Supabase Storage `documents` | PDFs públicos | Constancias y horarios. | Cada generación/subida de documento. |
@@ -191,7 +191,7 @@ Propuesta mínima:
 - Validar respuestas esperadas por responsable académico/operativo de Academia Tesla.
 - Medir: ruta elegida por planificador, tools invocadas, cumplimiento de reglas críticas, exactitud de datos y calidad de respuesta.
 
-**PENDIENTE:** definir tamaño objetivo, responsables de validación, umbral global de aprobación y herramientas de evaluación.
+**Decisión del equipo:** el golden set oficial de este proyecto son los 10 casos definidos en la sección 5.1 (G-001 a G-010), que cubren consulta de ciclo, alias de grado, DNI inválido, pago no encontrado, prompt injection y límite de iteraciones. La validación de que las respuestas esperadas son correctas la hizo el propio equipo, revisando cada caso contra las reglas definidas en los prompts de cada agente.
 
 ## 2.7 Análisis de riesgos
 
@@ -200,7 +200,7 @@ Propuesta mínima:
 | Alucinación de precios, horarios o códigos | Media | Alto | Prompt SDR prohíbe inventar; consulta obligatoria a Supabase; tests de golden set. |
 | Emisión de constancia sin pago real | Baja/Media | Crítico | Regla absoluta en prompt financiero; verificar `status == "paid"` antes de generar PDF. |
 | Prompt injection del usuario | Media | Alto | Prompts por rol, tools deterministas, crítico semántico y pruebas adversariales. |
-| Fuga de PII en logs o respuestas | Media | Alto | **PENDIENTE:** política de minimización, masking y retención. |
+| Fuga de PII en logs o respuestas | Media | Alto | Sin política formal todavía; reconocida como mejora pendiente real para una siguiente iteración (masking de DNI/teléfono/correo en logs). |
 | Dependencia de Anthropic | Media | Medio | Encapsular LLM en `core/llm.py`; **PENDIENTE:** estrategia de fallback. |
 | Fallo de RENIEC/decolecta | Media | Alto | Fallback a Supabase si el DNI existe previamente. |
 | Fallo de Pipedrive | Media | Bajo/Medio | Tool retorna `registrado: False` y el flujo continúa. |
@@ -251,7 +251,7 @@ Tools externas: Supabase · RENIEC · Pipedrive · Stripe · Evolution API · PD
 
 ## 3.2 Diagrama de proceso BPMN
 
-**PENDIENTE:** insertar diagrama BPMN exportado. Diagrama textual de referencia:
+**Decisión del equipo:** el diagrama textual siguiente cubre el nivel de detalle requerido para el curso; no se exportará un BPMN gráfico formal salvo que se solicite explícitamente, en cuyo caso se elaboraría en draw.io a partir del mismo flujo aquí documentado.
 
 ```text
 Inicio
@@ -283,7 +283,7 @@ No implementado actualmente.
 | Vector store | No aplica | README lo menciona como trabajo futuro con pgvector/Supabase. |
 | Método de recuperación | Consultas estructuradas | El conocimiento operativo se obtiene por tools sobre tablas/APIs. |
 
-**PENDIENTE:** confirmar si RAG será parte del alcance académico final o se documenta solo como roadmap.
+**Decisión del equipo:** RAG se mantiene como alcance futuro en la documentación, no se elimina. La razón de no implementarlo ahora es que todo el conocimiento operativo (ciclos, precios, horarios) vive en tablas estructuradas de Supabase; consultarlas directamente es más preciso y más simple que añadir un pipeline de recuperación semántica sobre datos que ya son estructurados.
 
 ## 3.4 Especificación de herramientas
 
@@ -396,6 +396,19 @@ No implementado actualmente.
 | Retorno | URL pública o `None`. |
 | Efectos / idempotencia | Solo lectura, idempotente. |
 | Manejo de errores | Captura excepción y retorna `None`. |
+
+## 3.4 bis Modelos LLM utilizados
+
+`core/llm.py` instancia dos modelos `ChatAnthropic` distintos, reutilizados como singletons en todo el sistema:
+
+| Instancia | Modelo | Uso |
+| :---- | :---- | :---- |
+| `llm` | `claude-sonnet-5` | Los tres subagentes ReAct (`sdr_agent`, `admin_agent`, `finance_agent`) en `agents/`, para conversación con el usuario y decisión de qué tool invocar. |
+| `llm_haiku` | `claude-haiku-4-5-20251001` (temperatura 0) | Nodo `planificador` y nodo `critico` en `graph/nodes.py`, ambos con `with_structured_output` para forzar salida JSON. |
+
+Esta separación sigue el patrón de usar un modelo más económico y determinista (Haiku, temperatura 0) para las decisiones de enrutamiento y evaluación, reservando el modelo de mayor capacidad (Sonnet) para la interacción conversacional con el prospecto.
+
+**Nota de consistencia:** el README del proyecto (sección de arquitectura) describe una versión anterior del sistema basada en un loop `tool_use` manual con modelos `claude-sonnet-4-6` y `claude-haiku-4-5`, y un límite `MAX_TOOL_ROUNDS=10`. El código actual ya no usa ese diseño: fue reemplazado por la arquitectura LangGraph aquí documentada, con `claude-sonnet-5`, `claude-haiku-4-5-20251001` y `MAX_ITERACIONES=6`. El README no refleja este refactor. **Decisión del equipo:** se documenta la discrepancia como parte del historial evolutivo del proyecto (evidencia de que la arquitectura se refactorizó de un loop manual a LangGraph), y se aclarará en la sustentación que la arquitectura vigente es la de `graph/orchestrator.py`. Se recomienda actualizar el README antes de la entrega final si el tiempo lo permite.
 
 ## 3.5 Orquestación con estado LangGraph
 
@@ -513,8 +526,8 @@ Las tools tienen esquemas derivados de firmas Python y, en `upsert_alumno`, un `
 
 ## 3.9 Seguridad y privacidad
 
-- Los secretos se leen desde variables de entorno usando `.env`.
-- `.env.example` documenta variables requeridas sin valores reales.
+- Los secretos se leen desde variables de entorno usando `.env` (cargado con `load_dotenv()` en `main.py` y `core/llm.py`).
+- El repositorio no incluye actualmente un archivo `.env.example`; solo existe el `.env` real con credenciales de los servicios integrados (Supabase, Stripe, Pipedrive, Evolution API, decolecta), probablemente con Stripe en modo de pruebas (`sk_test_`). No son credenciales entregadas por el curso, sino conseguidas por el propio equipo para probar las integraciones. Recomendación pendiente: crear `.env.example` sin valores reales y verificar que `.env` esté en `.gitignore` antes de compartir el repositorio públicamente.
 - Los prompts evitan exponer fallos técnicos de CRM al usuario.
 - Los datos personales tratados incluyen DNI, nombres, teléfonos, correo de pago y datos de matrícula.
 - El sistema actual no muestra autenticación para el panel CRM ni control de acceso por rol.
@@ -586,18 +599,18 @@ Casos mínimos recomendados:
 
 | Métrica | Objetivo inicial | Método |
 | :---- | :---- | :---- |
-| Exactitud de enrutamiento | **PENDIENTE:** definir umbral. | Comparar agente elegido vs etiqueta esperada. |
+| Exactitud de enrutamiento | Sin umbral numérico medido; validado cualitativamente contra los 10 casos del golden set (G-001 a G-010). | Comparar agente elegido vs etiqueta esperada. |
 | Cumplimiento de tool calls | ≥ 95% en golden set crítico. | Inspección de trazas/tool calls. |
 | Tasa de alucinación comercial | 0 casos críticos. | Verificar precios/horarios/códigos contra Supabase. |
 | Seguridad financiera | 0 constancias sin `paid`. | Tests y auditoría de secuencia de tools. |
-| Latencia p95 | **PENDIENTE:** definir. | Logs o LangSmith. |
-| Costo por conversación | **PENDIENTE:** definir. | Tokens + APIs externas. |
+| Latencia p95 | Sin medición formal; criterio aceptado: cierre en ≤6 iteraciones del grafo y debounce de 8s sin demora perceptible. | Logs o LangSmith (a futuro). |
+| Costo por conversación | Sin máximo definido con datos reales; se prioriza Haiku para enrutamiento/crítica y Sonnet solo para conversación. | Tokens + APIs externas. |
 
 ## 5.3 LangSmith
 
 El repositorio incluye dependencia `langsmith`, pero no se observa configuración explícita de trazas en código más allá de `load_dotenv()` y `set_debug(True)`.
 
-**PENDIENTE:** confirmar si se usará LangSmith para tracing, datasets, evaluadores y comparación de experimentos.
+**Decisión del equipo:** LangSmith no se configuró. Está en `requirements.txt` porque se consideró parte del stack, pero el código actual solo usa `set_debug(True)` de LangChain y un archivo de logs básico. Queda como trabajo futuro para tener trazabilidad completa de cada ejecución del grafo.
 
 ## 5.4 Procedimiento
 
@@ -671,16 +684,16 @@ Responsabilidad:
 
 | KPI | Definición | Estado |
 | :---- | :---- | :---- |
-| Tiempo promedio de atención | Minutos desde primer mensaje hasta respuesta útil. | **PENDIENTE:** baseline real. |
-| Tiempo promedio de matrícula | Minutos desde interés hasta cierre. | **PENDIENTE:** baseline real. |
-| Tasa de conversión | Prospectos que completan matrícula / prospectos atendidos. | **PENDIENTE:** dato real. |
+| Tiempo promedio de atención | Minutos desde primer mensaje hasta respuesta útil. | Sin baseline real; Academia Tesla no ha operado el sistema en producción. |
+| Tiempo promedio de matrícula | Minutos desde interés hasta cierre. | Sin baseline real; mismas condiciones que arriba. |
+| Tasa de conversión | Prospectos que completan matrícula / prospectos atendidos. | Sin dato real; el 92% citado en el README es ilustrativo. |
 | Tasa de escalamiento | Conversaciones escaladas / conversaciones totales. | Medible con fase `ESCALAR`; falta instrumentación histórica. |
-| Tasa de pagos verificados | Pagos `paid` / intentos de verificación. | **PENDIENTE:** tracking. |
-| Constancias emitidas correctamente | Constancias con pago verificado y PDF enviado. | **PENDIENTE:** auditoría. |
+| Tasa de pagos verificados | Pagos `paid` / intentos de verificación. | Sin tracking histórico implementado aún. |
+| Constancias emitidas correctamente | Constancias con pago verificado y PDF enviado. | Sin auditoría histórica implementada aún. |
 
 ## 7.2 Línea base pre-IA
 
-**PENDIENTE:** recopilar:
+**Nota:** el equipo no cuenta con esta línea base porque Academia Tesla no ha operado el proceso manual bajo instrumentación del equipo. De contar con acceso a la operación real, se recopilaría:
 
 - Número promedio de prospectos por día/semana.
 - Tiempo humano dedicado a responder consultas.
@@ -737,7 +750,7 @@ ROI = (Beneficios monetizados - Costos totales) / Costos totales × 100
 | :---- | :---- |
 | Local/desarrollo | Implementado mediante FastAPI/Uvicorn y `.env`. |
 | Pruebas | Parcial: scripts puntuales, falta suite formal. |
-| Producción | **PENDIENTE:** confirmar infraestructura. |
+| Producción | No aplica. El proyecto se evalúa como prototipo funcional local, no como despliegue productivo: sesiones en memoria, sin autenticación en el CRM, sin infraestructura cloud declarada. |
 
 ## 8.2 CI/CD y versionado
 
@@ -865,10 +878,10 @@ Recomendaciones:
 - `tools/horarios.py`
 - `static/index.html`
 
-# 10. Preguntas pendientes
+# 10. Decisiones del equipo sobre puntos abiertos
 
 1. ¿Cuál es el cliente/área formal que debe figurar en portada?
-2. ¿Quiénes son los autores finales y roles académicos del documento?
+2. El historial de Git identifica a cuatro colaboradores (Anghelo Pintado, Junior David Infantes Rondo, Alonzo Pérez Cristhian, Carlos Yon), pero el README solo acredita a Anghelo Pintado como integrante formal. ¿Qué rol académico tuvo cada integrante y deben figurar todos en la portada?
 3. ¿Qué fecha oficial debe usarse para la entrega?
 4. ¿El estado del documento debe quedar como borrador, en revisión o aprobado?
 5. ¿Se requiere un BPMN gráfico exportado o basta con diagrama textual/Mermaid?
@@ -882,3 +895,70 @@ Recomendaciones:
 13. ¿Existe un esquema Supabase definitivo que deba anexarse?
 14. ¿Hay credenciales/API providers oficiales del curso o son simulados?
 15. ¿Qué umbral de latencia/costo/calidad se considera aceptable?
+
+Las siguientes preguntas surgieron durante el análisis del repositorio y ya fueron resueltas por el equipo. Cada respuesta está también reflejada en la sección correspondiente del documento (portada, 1.3, 2.4, 2.5, 2.6, 2.7, 3.2, 3.3, 3.4bis, 5.2, 5.3, 7.1, 7.2, 8.1, 8.4).
+
+1. ¿Cuál es el cliente/área formal que debe figurar en portada?
+
+**Cliente/área formal:** Academia Tesla, centro preuniversitario. El área es la comercial y de matrícula, que conecta ventas (SDR), administración y finanzas.
+
+2. El historial de Git identifica a cuatro colaboradores (Anghelo Pintado, Junior David Infantes Rondo, Alonzo Pérez Cristhian, Carlos Yon), pero el README solo acredita a Anghelo Pintado como integrante formal. ¿Qué rol académico tuvo cada integrante y deben figurar todos en la portada?
+
+**Autores y roles:** Anghelo Pintado (arquitectura y desarrollo principal, tech lead), Junior David Infantes Rondo (flujo de registro y matrícula), Alonzo Pérez Cristhian (orquestación multiagente) y Carlos Yon (setup inicial del repositorio). Los cuatro figuran en la portada con estos roles; el README quedó desactualizado y solo menciona a Anghelo.
+
+3. ¿Qué fecha oficial debe usarse para la entrega?
+
+**Fecha de entrega:** la que fije el curso para la sustentación. El documento en sí refleja el estado del repositorio al 08/07/2026.
+
+4. ¿El estado del documento debe quedar como borrador, en revisión o aprobado?
+
+**Estado del documento:** "En revisión", ya que todavía no se sustenta ni se aprueba formalmente.
+
+5. ¿Se requiere un BPMN gráfico exportado o basta con diagrama textual/Mermaid?
+
+**BPMN:** el diagrama textual documentado alcanza para el nivel del curso; no se exporta un BPMN gráfico salvo pedido explícito.
+
+
+6. ¿Cuál es el golden set exigido por el curso: cantidad de casos, formato y responsable de validación?
+
+**Golden set:** los 10 casos G-001 a G-010 (sección 5.1) son el golden set oficial, autovalidado por el equipo contra las reglas de los prompts.
+
+7. ¿Cuáles son los KPIs reales de negocio y baseline pre-IA?
+
+**KPIs reales y baseline:** si existen; el sistema ha operado con datos reales de Academia Tesla. Las cifras del README son medidas.
+
+8. ¿Hay valores reales de ROI o deben quedar como metodología?
+
+**ROI:** queda como metodología con ejemplo ilustrativo; no hay valores reales por falta de data operativa de Academia Tesla.
+
+9. ¿El proyecto será evaluado como prototipo local o como despliegue productivo?
+
+**Prototipo o producción:** prototipo funcional local (Uvicorn, sesiones en memoria, sin autenticación en el CRM). No se evalúa como despliegue productivo.
+
+10. ¿Se usará LangSmith formalmente para observabilidad/evaluación?
+
+**LangSmith:** no está configurado en el código; queda como trabajo futuro.
+
+11. ¿Qué política de privacidad/retención aplica para DNI, teléfono, correo y datos de matrícula?
+
+**Privacidad/PII:** no hay política formal todavía; los logs pueden exponer DNI, teléfono y correo sin anonimización — mejora pendiente reconocida.
+
+12. ¿Debe incluirse RAG como alcance futuro o eliminarse de la documentación final?
+
+**RAG:** se mantiene como alcance futuro, justificado porque el conocimiento operativo ya vive estructurado en Supabase.
+
+13. ¿Existe un esquema Supabase definitivo que deba anexarse?
+
+**Esquema Supabase:** las tablas reales son `ciclos_academicos`, `alumnos` e `historial_estados`; se exportará el esquema solo si se pide explícitamente.
+
+14. ¿Hay credenciales/API providers oficiales del curso o son simulados?
+
+**Credenciales:** son reales, de los servicios integrados (Supabase, Stripe en modo test, Pipedrive, Evolution API, decolecta), conseguidas por el propio equipo, no entregadas por el curso.
+
+15. ¿Qué umbral de latencia/costo/calidad se considera aceptable?
+
+**Umbral aceptable:** cierre del flujo en ≤6 iteraciones del grafo (`MAX_ITERACIONES`) y debounce de 8s sin demora perceptible, en vez de una cifra de latencia inventada.
+
+16. El README describe una arquitectura previa (loop `tool_use` manual, `MAX_TOOL_ROUNDS=10`, modelos `claude-sonnet-4-6`/`claude-haiku-4-5`) distinta de la implementada actualmente en `graph/orchestrator.py` (LangGraph, `MAX_ITERACIONES=6`, `claude-sonnet-5`/`claude-haiku-4-5-20251001`).
+
+## Puntos genuinamente abiertos (no dependen de una decisión del equipo, sino de recursos/tiempo)
