@@ -154,5 +154,10 @@ def build_graph():
 # MemorySaver mantiene el estado por thread_id (teléfono del usuario).
 # Para producción con PostgreSQL, reemplazar por AsyncPostgresSaver.
 
-memory = MemorySaver()
-compiled_graph = build_graph().compile(checkpointer=memory)
+def compile_graph(checkpointer=None):
+    if checkpointer is None:
+        checkpointer = MemorySaver()
+    return build_graph().compile(checkpointer=checkpointer)
+
+
+compiled_graph = compile_graph()

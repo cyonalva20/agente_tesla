@@ -25,8 +25,18 @@ GRADOS_VALIDOS = {
 GRADOS_ALIAS = {
     "5to secundaria":      "5to_secundaria",
     "5to de secundaria":   "5to_secundaria",
+    "5 secundaria":        "5to_secundaria",
+    "5 de secundaria":     "5to_secundaria",
+    "5to":                 "5to_secundaria",
+    "quinto":              "5to_secundaria",
+    "quinto secundaria":   "5to_secundaria",
     "4to secundaria":      "4to_secundaria",
     "4to de secundaria":   "4to_secundaria",
+    "4 secundaria":        "4to_secundaria",
+    "4 de secundaria":     "4to_secundaria",
+    "4to":                 "4to_secundaria",
+    "cuarto":              "4to_secundaria",
+    "cuarto secundaria":   "4to_secundaria",
     "pre universitario":   "pre_universitario",
     "preuniversitario":    "pre_universitario",
 }
