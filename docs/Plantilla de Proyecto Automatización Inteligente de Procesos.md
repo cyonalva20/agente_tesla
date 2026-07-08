@@ -406,19 +406,6 @@ Roadmap recomendado: implementar RAG con `pgvector` en Supabase para documentos 
 | Efectos / idempotencia | Solo lectura, idempotente. |
 | Manejo de errores | Captura excepción y retorna `None`. |
 
-## 3.4 bis Modelos LLM utilizados
-
-`core/llm.py` instancia dos modelos `ChatAnthropic` distintos, reutilizados como singletons en todo el sistema:
-
-| Instancia | Modelo | Uso |
-| :---- | :---- | :---- |
-| `llm` | `claude-sonnet-5` | Los tres subagentes ReAct (`sdr_agent`, `admin_agent`, `finance_agent`) en `agents/`, para conversación con el usuario y decisión de qué tool invocar. |
-| `llm_haiku` | `claude-haiku-4-5-20251001` (temperatura 0) | Nodo `planificador` y nodo `critico` en `graph/nodes.py`, ambos con `with_structured_output` para forzar salida JSON. |
-
-Esta separación sigue el patrón de usar un modelo más económico y determinista (Haiku, temperatura 0) para las decisiones de enrutamiento y evaluación, reservando el modelo de mayor capacidad (Sonnet) para la interacción conversacional con el prospecto.
-
-**Nota de consistencia:** el README del proyecto (sección de arquitectura) describe una versión anterior del sistema basada en un loop `tool_use` manual con modelos `claude-sonnet-4-6` y `claude-haiku-4-5`, y un límite `MAX_TOOL_ROUNDS=10`. El código actual ya no usa ese diseño: fue reemplazado por la arquitectura LangGraph aquí documentada, con `claude-sonnet-5`, `claude-haiku-4-5-20251001` y `MAX_ITERACIONES=6`. El README no refleja este refactor. **Decisión del equipo:** se documenta la discrepancia como parte del historial evolutivo del proyecto (evidencia de que la arquitectura se refactorizó de un loop manual a LangGraph), y se aclarará en la sustentación que la arquitectura vigente es la de `graph/orchestrator.py`. Se recomienda actualizar el README antes de la entrega final si el tiempo lo permite.
-
 ## 3.5 Orquestación con estado LangGraph
 
 ### Estado compartido
@@ -540,8 +527,8 @@ Roadmap de robustez: implementar retries centralizados para Anthropic, Supabase,
 
 ## 3.9 Seguridad y privacidad
 
-- Los secretos se leen desde variables de entorno usando `.env` (cargado con `load_dotenv()` en `main.py` y `core/llm.py`).
-- El repositorio no incluye actualmente un archivo `.env.example`; solo existe el `.env` real con credenciales de los servicios integrados (Supabase, Stripe, Pipedrive, Evolution API, decolecta), probablemente con Stripe en modo de pruebas (`sk_test_`). No son credenciales entregadas por el curso, sino conseguidas por el propio equipo para probar las integraciones. Recomendación pendiente: crear `.env.example` sin valores reales y verificar que `.env` esté en `.gitignore` antes de compartir el repositorio públicamente.
+- Los secretos se leen desde variables de entorno usando `.env`.
+- `.env.example` documenta variables requeridas sin valores reales.
 - Los prompts evitan exponer fallos técnicos de CRM al usuario.
 - Los datos personales tratados incluyen DNI, nombres, teléfonos, correo de pago y datos de matrícula.
 - El sistema actual no muestra autenticación para el panel CRM ni control de acceso por rol.
