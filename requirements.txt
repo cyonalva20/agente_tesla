@@ -3,6 +3,7 @@ anthropic
 python-dotenv
 fastapi
 uvicorn
+gunicorn
 requests
 websockets
 
