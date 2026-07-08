@@ -957,6 +957,13 @@ Recomendaciones:
 - Medir tokens por agente y ajustar modelos.
 - Revisar costos mensualmente.
 
+## 8.9 Enlaces de entrega
+
+| Recurso | Enlace |
+| :---- | :---- |
+| Repositorio GitHub | <https://github.com/cyonalva20/agente_tesla/tree/develop> |
+| Video de demostración | <https://drive.google.com/file/d/19db8lel6CRzTm08B65LrQwzbrYWWp0ut/view?usp=sharing> |
+
 # 9. Apéndices
 
 ## 9.1 Glosario
@@ -995,7 +1002,12 @@ Recomendaciones:
 - `tools/horarios.py`
 - `static/index.html`
 
-## 9.3 Esquema Supabase/Postgres de referencia
+## 9.3 Referencias externas
+
+- Repositorio GitHub del proyecto: <https://github.com/cyonalva20/agente_tesla/tree/develop>
+- Video de demostración del sistema: <https://drive.google.com/file/d/19db8lel6CRzTm08B65LrQwzbrYWWp0ut/view?usp=sharing>
+
+## 9.4 Esquema Supabase/Postgres de referencia
 
 El siguiente esquema corresponde al estado compartido para Supabase/Postgres. Se incluye como referencia documental y no debe ejecutarse directamente sin revisar orden de creación, extensiones, índices y políticas RLS.
 
