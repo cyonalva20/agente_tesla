@@ -150,9 +150,9 @@ def build_graph():
     return builder
 
 
-# ── Instancia compilada con persistencia en memoria ──────────────
-# MemorySaver mantiene el estado por thread_id (teléfono del usuario).
-# Para producción con PostgreSQL, reemplazar por AsyncPostgresSaver.
+# ── Compilación del grafo con checkpointer configurable ──────────────
+# MemorySaver se usa como fallback local. En startup, main.py recompila
+# el grafo con AsyncPostgresSaver cuando DATABASE_URI/DATABASE_URL existe.
 
 def compile_graph(checkpointer=None):
     if checkpointer is None:

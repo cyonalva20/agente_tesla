@@ -15,6 +15,19 @@ from dotenv import load_dotenv
 # Esto asegura que LANGSMITH_TRACING y demás estén disponibles.
 load_dotenv()
 
+
+def configure_langsmith() -> None:
+    """Enable LangSmith tracing when credentials are available."""
+    if os.getenv("LANGSMITH_API_KEY"):
+        os.environ.setdefault("LANGSMITH_TRACING", "true")
+        os.environ.setdefault("LANGCHAIN_TRACING_V2", os.environ["LANGSMITH_TRACING"])
+        os.environ.setdefault("LANGSMITH_PROJECT", "agente-tesla")
+    else:
+        os.environ.setdefault("LANGSMITH_TRACING", "false")
+
+
+configure_langsmith()
+
 from langchain_core.messages import HumanMessage
 from langchain_core.messages import AIMessage
 from langchain_core.globals import set_debug
