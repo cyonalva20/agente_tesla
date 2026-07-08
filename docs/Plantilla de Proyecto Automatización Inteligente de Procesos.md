@@ -235,23 +235,65 @@ El sistema usa una arquitectura web + grafo de agentes:
 | Chain lineal (LCEL) | No aplica: el proceso tiene ramas, estado y decisiones dinámicas. |
 | Agente con herramientas | Aplica parcialmente en cada subagente ReAct. |
 | LangGraph | Elegido. Modela nodos, rutas condicionales, ciclos de crítica y checkpointing por conversación. |
-| Deep Agent | Aplicado como patrón jerárquico: supervisor/planificador + subagentes especializados + crítico. No se observa memoria persistente de artefactos fuera de LangGraph y sesión en memoria. |
+| Deep Agent | Aplicado como patrón jerárquico: supervisor/planificador + subagentes especializados + crítico, con persistencia de sesiones y checkpoints en Postgres cuando existe base configurada. |
 
 ### Esquema de composición
 
-```text
-WhatsApp / CRM web
-      ↓
-FastAPI main.py
-      ↓
-LangGraph compiled_graph
-      ↓
-planificador ──→ agente_sdr ───────────────┐
-      │          agente_administrativo ─────┼─→ critico ──→ END
-      │          agente_financiero ─────────┘      │
-      │          escalar ──→ END                   └─ RECHAZADO → planificador
-      ↓
-Tools externas: Supabase · RENIEC · Pipedrive · Stripe · Evolution API · PDF
+```mermaid
+flowchart TB
+    WA["WhatsApp<br/>Evolution API"] --> API["FastAPI main.py<br/>webhook, REST, WebSocket"]
+    CRM["CRM web local<br/>static/index.html"] --> API
+
+    API --> SESSION["SessionStore<br/>sesiones e historial CRM"]
+    API --> BUFFER["Debounce 8 s<br/>buffer de mensajes"]
+    BUFFER --> GRAPH["LangGraph compiled_graph<br/>StateGraph por thread_id"]
+
+    SESSION --> PGCRM["Postgres/Supabase<br/>crm_sessions + crm_messages"]
+    SESSION -.fallback.-> MEMSESSION["InMemorySessionStore"]
+
+    GRAPH --> CHECKPOINTS["AsyncPostgresSaver<br/>checkpoints + blobs + writes"]
+    GRAPH -.fallback.-> MEMORY["MemorySaver"]
+    GRAPH -.tracing.-> LANGSMITH["LangSmith<br/>trazas, tool calls, evaluación"]
+
+    GRAPH --> AGENTS["Subagentes ReAct<br/>SDR + Administrativo + Financiero"]
+    GRAPH --> CRITIC["Crítico LLM<br/>aprobación o replanificación"]
+    GRAPH --> HUMAN["Escalamiento humano<br/>Mesias Guevara"]
+
+    AGENTS --> TOOLS["Tools deterministas<br/>Supabase, RENIEC, Stripe, Pipedrive, PDF, WhatsApp"]
+    CRITIC --> LLM["Anthropic Claude<br/>planificación, agentes y crítica"]
+    AGENTS --> LLM
+
+    TOOLS --> SUPA["Supabase DB<br/>ciclos, alumnos, historial"]
+    TOOLS --> STORAGE["Supabase Storage<br/>constancias y horarios"]
+    TOOLS --> RENIEC["RENIEC/decolecta<br/>validación DNI"]
+    TOOLS --> STRIPE["Stripe<br/>links y verificación de pago"]
+    TOOLS --> PIPE["Pipedrive<br/>leads comerciales"]
+    TOOLS --> EVO["Evolution API<br/>envío WhatsApp"]
+```
+
+Flujo interno del grafo:
+
+```mermaid
+flowchart LR
+    START(("START")) --> PLAN["planificador<br/>node_planificador"]
+    PLAN -->|captación| SDR["agente_sdr<br/>consultar ciclos + lead"]
+    PLAN -->|registro| ADMIN["agente_administrativo<br/>validar DNI + alumno + pago"]
+    PLAN -->|cierre| FIN["agente_financiero<br/>verificar pago + constancia"]
+    PLAN -->|anomalía o iteraciones >= 6| ESC["escalar<br/>atención humana"]
+    PLAN -->|responder_usuario| END_NODE(("END"))
+
+    SDR --> CRITIC["crítico<br/>APROBADO / RECHAZADO"]
+    ADMIN --> CRITIC
+    FIN --> CRITIC
+    CRITIC -->|APROBADO| END_NODE
+    CRITIC -->|RECHAZADO| PLAN
+    ESC --> END_NODE
+
+    SDR -.tools.-> SDRT["consultar_ciclos<br/>registrar_lead"]
+    ADMIN -.tools.-> ADMINT["validar_dni<br/>upsert_alumno<br/>generar_link_pago"]
+    FIN -.tools.-> FINT["verificar_pago<br/>generar_constancia<br/>enviar_documento<br/>obtener_url_horario"]
+    PLAN -.checkpoint.-> CP["thread_id = teléfono<br/>Postgres o MemorySaver"]
+    CRITIC -.checkpoint.-> CP
 ```
 
 ## 3.2 Diagrama de proceso BPMN
