@@ -23,7 +23,7 @@ from langchain_core.globals import set_debug
 set_debug(True)
 
 from graph.orchestrator import compile_graph
-from core.session_store import create_session_store, normalize_database_uri
+from core.session_store import InMemorySessionStore, create_session_store, normalize_database_uri
 from tools.evolution_whatsapp import enviar_mensaje_raw
 
 
@@ -60,20 +60,39 @@ ws_manager = ConnectionManager()
 
 @app.on_event("startup")
 async def startup_event():
-    global compiled_graph, _checkpointer_cm
-    session_store.setup()
+    global compiled_graph, _checkpointer_cm, session_store
+    try:
+        session_store.setup()
+    except Exception as exc:
+        print(
+            "[WARN] Persistent session store unavailable; "
+            f"falling back to in-memory sessions: {exc}"
+        )
+        session_store = InMemorySessionStore()
+        session_store.setup()
+        return
 
     database_uri = os.getenv("DATABASE_URI") or os.getenv("DATABASE_URL")
     if database_uri:
         os.environ.setdefault("LANGGRAPH_STRICT_MSGPACK", "true")
         from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
-        _checkpointer_cm = AsyncPostgresSaver.from_conn_string(
-            normalize_database_uri(database_uri)
-        )
-        checkpointer = await _checkpointer_cm.__aenter__()
-        await checkpointer.setup()
-        compiled_graph = compile_graph(checkpointer=checkpointer)
+        try:
+            _checkpointer_cm = AsyncPostgresSaver.from_conn_string(
+                normalize_database_uri(database_uri)
+            )
+            checkpointer = await _checkpointer_cm.__aenter__()
+            await checkpointer.setup()
+            compiled_graph = compile_graph(checkpointer=checkpointer)
+        except Exception as exc:
+            print(
+                "[WARN] LangGraph Postgres checkpointer unavailable; "
+                f"using in-memory checkpointer: {exc}"
+            )
+            if _checkpointer_cm is not None:
+                await _checkpointer_cm.__aexit__(None, None, None)
+                _checkpointer_cm = None
+            compiled_graph = compile_graph()
 
 
 @app.on_event("shutdown")
