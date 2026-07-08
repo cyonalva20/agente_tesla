@@ -1,16 +1,18 @@
 from tools.supabase_client import _get_client
+from langchain_core.tools import tool
 
+@tool
 def obtener_url_horario(ciclo_codigo: str) -> str | None:
     """
     Construye la URL pública para el horario de un ciclo determinado.
     Se asume que los horarios están en el bucket 'documents' bajo la ruta 'horarios/CODIGO.pdf'.
+    Retorna la URL del PDF.
     """
     try:
         client = _get_client()
         file_path = f"horarios/{ciclo_codigo}.pdf"
         
-        # Obtener URL pública (esto no valida si el archivo existe o no, 
-        # solo construye la URL basándose en la configuración del bucket)
+        # Obtener URL pública
         url_publica = client.storage.from_("documents").get_public_url(file_path)
         
         return url_publica

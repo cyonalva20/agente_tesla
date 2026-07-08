@@ -15,7 +15,9 @@ class AgenteTeslaState(TypedDict):
     ciclo_codigo: Optional[str]
     alumno_id: Optional[str]
     charge_id: Optional[str]
+    email_pago: Optional[str]
     session_id: str
+    telefono: Optional[str]
     
     # Variables de control para el patrón Supervisor (Deep Agent)
     plan: Optional[str]

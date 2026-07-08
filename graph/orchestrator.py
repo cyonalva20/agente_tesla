@@ -1,36 +1,98 @@
+"""
+Grafo principal del Orquestador de Academia Tesla.
+Implementa el patrón Deep Agent + Supervisor usando LangGraph.
+"""
 from typing import Literal
 from langgraph.graph import StateGraph, END, START
-from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
+from langgraph.checkpoint.memory import MemorySaver
 from core.estado import AgenteTeslaState
-from graph.nodes import node_planificador, node_critico
+from graph.nodes import node_planificador, node_critico, MAX_ITERACIONES
 from agents.sdr_agent import sdr_agent
 from agents.admin_agent import admin_agent
 from agents.finance_agent import finance_agent
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage, SystemMessage
 
-# Envoltorios para los sub-grafos para que devuelvan el estado actualizado
+
+def _filter_system_messages(messages: list) -> list:
+    """
+    Filtra SystemMessages del historial de conversación.
+    Cada sub-agente (create_react_agent) ya inyecta su propio system prompt;
+    pasar SystemMessages residuales del estado acumulado genera el error
+    'Received multiple non-consecutive system messages' de Anthropic.
+    """
+    return [msg for msg in messages if not isinstance(msg, SystemMessage)]
+
+
+# ── Envoltorios para sub-grafos ReAct ──────────────────────────────
+
 async def call_sdr(state: AgenteTeslaState):
-    response = await sdr_agent.ainvoke(state)
-    return {"messages": response["messages"][-1]}
+    """Invoca el sub-agente SDR (ReAct) y retorna su última respuesta."""
+    clean_messages = _filter_system_messages(state["messages"])
+    response = await sdr_agent.ainvoke({"messages": clean_messages})
+    return {
+        "messages": response["messages"][-1:],
+        "fase": "CAPTACION"
+    }
+
 
 async def call_admin(state: AgenteTeslaState):
-    response = await admin_agent.ainvoke(state)
-    return {"messages": response["messages"][-1]}
+    """Invoca el sub-agente Administrativo (ReAct) y retorna su última respuesta."""
+    clean_messages = _filter_system_messages(state["messages"])
+    
+    ciclo_codigo = state.get("ciclo_codigo")
+    if ciclo_codigo:
+        clean_messages = [
+            SystemMessage(content=f"INSTRUCCIÓN CRÍTICA: El código exacto del ciclo seleccionado es '{ciclo_codigo}'. DEBES usar este valor exacto para el parámetro ciclo_codigo en upsert_alumno.")
+        ] + clean_messages
+        
+    response = await admin_agent.ainvoke({"messages": clean_messages})
+    return {
+        "messages": response["messages"][-1:],
+        "fase": "REGISTRO"
+    }
+
 
 async def call_finance(state: AgenteTeslaState):
-    response = await finance_agent.ainvoke(state)
-    return {"messages": response["messages"][-1]}
+    """Invoca el sub-agente Financiero (ReAct) y retorna su última respuesta."""
+    clean_messages = _filter_system_messages(state["messages"])
+    response = await finance_agent.ainvoke({"messages": clean_messages})
+    return {
+        "messages": response["messages"][-1:],
+        "fase": "CIERRE"
+    }
+
 
 def node_escalar(state: AgenteTeslaState):
-    msg = AIMessage(content="⚠️ Se han detectado múltiples intentos o anomalías. Este caso ha sido escalado a atención humana.")
+    """Nodo terminal: escala el caso a atención humana."""
+    sid = state.get("session_id", "N/A")
+    msg = AIMessage(
+        content=(
+            "⚠️ **Caso escalado a atención humana**\n\n"
+            "Se han detectado múltiples intentos o anomalías en esta sesión. "
+            "Un asesor humano revisará su caso a la brevedad.\n\n"
+            f"📋 **Session ID:** {sid}\n"
+            f"📄 **DNI:** {state.get('dni_alumno', 'N/A')}, "
+            f"**Ciclo:** {state.get('ciclo_codigo', 'N/A')}\n\n"
+            "Por favor, comuníquese al 📞 (01) 555-0100 o espere a que un asesor lo contacte."
+        )
+    )
     return {"messages": [msg], "fase": "ESCALAR"}
 
-def route_plan(state: AgenteTeslaState) -> Literal["agente_sdr", "agente_administrativo", "agente_financiero", "escalar", "__end__"]:
-    # Freno de seguridad
-    if state.get("iteraciones", 0) >= 3:
+
+# ── Enrutamiento condicional ──────────────────────────────────────
+
+def route_plan(state: AgenteTeslaState) -> Literal[
+    "agente_sdr", "agente_administrativo", "agente_financiero", "escalar", "__end__"
+]:
+    """
+    Enruta la decisión del planificador al nodo correspondiente.
+    Incluye freno de seguridad (add_conditional_edges).
+    """
+    # Freno de seguridad: límite de iteraciones
+    if state.get("iteraciones", 0) >= MAX_ITERACIONES:
         return "escalar"
     
-    plan = state.get("plan")
+    plan = state.get("plan", "responder_usuario")
     if plan == "agente_sdr":
         return "agente_sdr"
     elif plan == "agente_administrativo":
@@ -40,15 +102,26 @@ def route_plan(state: AgenteTeslaState) -> Literal["agente_sdr", "agente_adminis
     elif plan == "escalar":
         return "escalar"
     else:
+        # "responder_usuario" → el último AIMessage ya es la respuesta
         return "__end__"
 
-def route_critico(state: AgenteTeslaState) -> Literal["planificador"]:
-    # Independientemente del veredicto, el planificador decidirá el siguiente paso
-    # Si fue rechazado, el planificador verá la crítica y ordenará corregir.
-    # Si fue aprobado, el planificador verá que todo está bien y decidirá "responder_usuario".
+
+def route_critico(state: AgenteTeslaState) -> Literal["planificador", "__end__"]:
+    """
+    Enruta según el veredicto del crítico.
+    APROBADO → terminar (la respuesta es válida).
+    RECHAZADO → volver al planificador para corregir.
+    """
+    if state.get("veredicto") == "APROBADO":
+        return "__end__"
+    # RECHAZADO: volver al planificador con el feedback
     return "planificador"
 
+
+# ── Construcción y compilación del grafo ──────────────────────────
+
 def build_graph():
+    """Construye el StateGraph del orquestador."""
     builder = StateGraph(AgenteTeslaState)
 
     # Añadir nodos
@@ -59,22 +132,27 @@ def build_graph():
     builder.add_node("critico", node_critico)
     builder.add_node("escalar", node_escalar)
 
-    # Añadir aristas
+    # Flujo: START → planificador → enrutamiento condicional
     builder.add_edge(START, "planificador")
     builder.add_conditional_edges("planificador", route_plan)
     
-    # Después de cada agente, se evalúa la respuesta
+    # Después de cada agente, evaluación por el crítico
     builder.add_edge("agente_sdr", "critico")
     builder.add_edge("agente_administrativo", "critico")
     builder.add_edge("agente_financiero", "critico")
     
-    # El crítico siempre devuelve el control al planificador
+    # Crítico: si aprobado → END, si rechazado → planificador
     builder.add_conditional_edges("critico", route_critico)
     
-    # Escalar termina la ejecución
+    # Escalar → END
     builder.add_edge("escalar", END)
 
     return builder
 
-# Instancia del grafo (sin compilar aún, se compilará con el checkpointer externamente)
-uncompiled_graph = build_graph()
+
+# ── Instancia compilada con persistencia en memoria ──────────────
+# MemorySaver mantiene el estado por thread_id (teléfono del usuario).
+# Para producción con PostgreSQL, reemplazar por AsyncPostgresSaver.
+
+memory = MemorySaver()
+compiled_graph = build_graph().compile(checkpointer=memory)

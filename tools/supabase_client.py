@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from supabase import create_client, Client
 from dotenv import load_dotenv
 from langchain_core.tools import tool
-
+from pydantic import BaseModel, Field
+from typing import Optional
 load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
@@ -77,15 +78,27 @@ def consultar_ciclos(grado: str) -> list:
     return response.data
 
 
-@tool
-def upsert_alumno(datos: dict) -> dict:
+class AlumnoInput(BaseModel):
+    dni_alumno: str = Field(..., description="DNI del alumno")
+    nombres: str = Field(..., description="Nombres del alumno")
+    apellidos: str = Field(..., description="Apellidos del alumno")
+    grado: str = Field(..., description="Grado del alumno")
+    apoderado_nombre: str = Field(..., description="Nombre completo del apoderado")
+    apoderado_dni: str = Field(..., description="DNI del apoderado")
+    apoderado_telefono: str = Field(..., description="Teléfono del apoderado (formato +51...)")
+    ciclo_codigo: Optional[str] = Field(None, description="Código EXACTO del ciclo en base de datos (ej. G-SEC5-2026-B). NO uses descripciones.")
+    estado: Optional[str] = Field("Registrado", description="Estado del alumno")
+
+@tool(args_schema=AlumnoInput)
+def upsert_alumno(**kwargs) -> dict:
     """
     Inserta o actualiza un alumno en la tabla alumnos.
     UPSERT con onConflict='dni_alumno'.
     Retorna el registro completo con id generado.
     """
+    datos = kwargs
     # ✅ Normalizar grado antes de persistir para mantener consistencia
-    if "grado" in datos:
+    if "grado" in datos and datos["grado"]:
         datos["grado"] = normalizar_grado(datos["grado"])
 
     response = (
@@ -96,21 +109,21 @@ def upsert_alumno(datos: dict) -> dict:
     return response.data[0] if response.data else {}
 
 
+@tool
 def actualizar_estado_alumno(
     alumno_id: str,
     nuevo_estado: str,
-    metadata: dict = None,       # ✅ Fix: default mutable corregido
-    session_id: str = None       # ✅ Nuevo: session_id persistido
+    metadata: dict = None,
 ) -> dict:
     """
     Actualiza el estado de un alumno y registra el cambio en historial_estados.
     1. Obtiene el estado anterior del alumno.
     2. UPDATE alumnos SET estado=nuevo_estado WHERE id=alumno_id.
     3. INSERT en historial_estados con estado_anterior, estado_nuevo,
-       metadata, session_id y timestamp=now().
+       metadata y timestamp=now().
     Retorna el registro actualizado.
     """
-    metadata = metadata or {}   # ✅ Fix: evita default mutable compartido
+    metadata = metadata or {}
 
     # 1. Obtener estado anterior
     alumno_actual = (
@@ -139,12 +152,10 @@ def actualizar_estado_alumno(
             "estado_anterior": estado_anterior,
             "estado_nuevo":    nuevo_estado,
             "metadata":        metadata,
-            "session_id":      session_id,   # ✅ Nuevo: persiste el session_id
             "timestamp":       datetime.now(timezone.utc).isoformat()
         }).execute()
     )
 
-    # ✅ Nuevo: error explícito si el historial no se guardó
     if not historial_response.data:
         raise RuntimeError(
             f"Error al registrar historial para alumno {alumno_id}"
@@ -153,13 +164,8 @@ def actualizar_estado_alumno(
     return response.data[0] if response.data else {}
 
 
-@tool
-def obtener_alumno_por_dni(dni: str) -> dict | None:
-    """
-    Busca un alumno por su DNI.
-    SELECT * FROM alumnos WHERE dni_alumno=dni LIMIT 1.
-    Retorna el registro o None si no existe.
-    """
+def _obtener_alumno_por_dni_raw(dni: str) -> dict | None:
+    """Implementación raw para uso directo (ej: fallback en reniec.py)."""
     response = (
         _get_client().table("alumnos")
         .select("*")
@@ -171,19 +177,46 @@ def obtener_alumno_por_dni(dni: str) -> dict | None:
 
 
 @tool
-def obtener_alumno_por_id(alumno_id: str) -> dict | None:
+def obtener_alumno_por_dni(dni: str) -> dict | None:
     """
-    Busca un alumno por su ID (UUID).
-    SELECT * FROM alumnos WHERE id=alumno_id LIMIT 1.
+    Busca un alumno por su DNI.
+    SELECT * FROM alumnos WHERE dni_alumno=dni LIMIT 1.
     Retorna el registro o None si no existe.
     """
-    response = (
-        _get_client().table("alumnos")
-        .select("*")
-        .eq("id", alumno_id)
-        .limit(1)
-        .execute()
-    )
+    return _obtener_alumno_por_dni_raw(dni)
+
+
+import uuid
+
+@tool
+def obtener_alumno_por_id(alumno_id: str) -> dict | None:
+    """
+    Busca un alumno por su ID (UUID). Si el ID no es un UUID válido,
+    asume que es un DNI y busca por dni_alumno.
+    Retorna el registro o None si no existe.
+    """
+    try:
+        uuid.UUID(str(alumno_id))
+        is_uuid = True
+    except ValueError:
+        is_uuid = False
+
+    if is_uuid:
+        response = (
+            _get_client().table("alumnos")
+            .select("*")
+            .eq("id", alumno_id)
+            .limit(1)
+            .execute()
+        )
+    else:
+        response = (
+            _get_client().table("alumnos")
+            .select("*")
+            .eq("dni_alumno", alumno_id)
+            .limit(1)
+            .execute()
+        )
     return response.data[0] if response.data else None
 
 

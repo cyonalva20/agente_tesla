@@ -11,6 +11,7 @@ from reportlab.pdfgen import canvas
 import qrcode
 from io import BytesIO
 from langchain_core.tools import tool
+from tools.supabase_client import _get_client
 
 @tool
 def generar_constancia(alumno: dict, ciclo: dict) -> str:

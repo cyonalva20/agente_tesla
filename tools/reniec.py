@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from dotenv import load_dotenv
 from langchain_core.tools import tool
@@ -9,29 +10,41 @@ APIPERU_TOKEN = os.getenv("APIPERU_TOKEN")
 
 @tool
 def validar_dni(dni: str) -> dict:
-    # ✅ URL correcta
+    """Valida un DNI peruano de 8 dígitos contra RENIEC. Retorna nombres oficiales si es válido."""
     url = f"https://api.decolecta.com/v1/reniec/dni?numero={dni}"
     headers = {"Authorization": f"Bearer {APIPERU_TOKEN}"}
 
-    try:
-        response = requests.get(url, headers=headers, timeout=10)
+    max_retries = 3
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, headers=headers, timeout=10)
 
-        if response.status_code == 200:
-            data = response.json()
-            return {
-                "valido": True,
-                "fuente": "reniec",
-                "nombres":   data.get("first_name", ""),
-                "apellidos": (
-                    f"{data.get('first_last_name', '')} "
-                    f"{data.get('second_last_name', '')}"
-                ).strip()
-            }
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "valido": True,
+                    "fuente": "reniec",
+                    "nombres":   data.get("first_name", ""),
+                    "apellidos": (
+                        f"{data.get('first_last_name', '')} "
+                        f"{data.get('second_last_name', '')}"
+                    ).strip()
+                }
 
-        print(f"[RENIEC] DNI {dni} → HTTP {response.status_code} | {response.text[:200]}")
+            if response.status_code == 429:
+                print(f"[RENIEC] DNI {dni} → HTTP 429. Reintentando ({attempt + 1}/{max_retries})...")
+                time.sleep(1.5 * (attempt + 1))
+                continue
 
-    except requests.RequestException as e:
-        print(f"[RENIEC] DNI {dni} → Error de conexión: {e}")
+            print(f"[RENIEC] DNI {dni} → HTTP {response.status_code} | {response.text[:200]}")
+            break
+
+        except requests.RequestException as e:
+            print(f"[RENIEC] DNI {dni} → Error de conexión: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(1.0)
+            else:
+                break
 
     return _validar_dni_supabase(dni)
 
@@ -41,8 +54,8 @@ def _validar_dni_supabase(dni: str) -> dict:
     Útil cuando RENIEC no está disponible o el token expiró.
     """
     try:
-        from tools.supabase_client import obtener_alumno_por_dni
-        alumno = obtener_alumno_por_dni(dni)
+        from tools.supabase_client import _obtener_alumno_por_dni_raw
+        alumno = _obtener_alumno_por_dni_raw(dni)
 
         if alumno:
             print(f"[RENIEC] DNI {dni} → encontrado en Supabase (fallback)")

@@ -1,10 +1,20 @@
+# Core
 anthropic
 python-dotenv
 fastapi
 uvicorn
 requests
+websockets
+
+# LangChain ecosystem
+langchain>=0.3.0
+langchain-anthropic>=0.3.0
+langchain-core>=0.3.0
+langgraph>=0.2.0
+langsmith>=0.1.0
+
+# Tools & integrations
 reportlab
 qrcode[pil]
 supabase
 stripe
-websockets

@@ -11,5 +11,5 @@ sdr_tools = [consultar_ciclos, registrar_lead]
 sdr_agent = create_react_agent(
     model=llm,
     tools=sdr_tools,
-    state_modifier=SDR_SYSTEM_PROMPT
+    prompt=SDR_SYSTEM_PROMPT
 )
